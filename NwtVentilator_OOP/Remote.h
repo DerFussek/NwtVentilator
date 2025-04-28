@@ -37,13 +37,15 @@ class Remote {
     Remote(int Pin) : receiver(Pin), pressedKeyName(nullptr) {}
 
     void setup() {
-      Serial.begin(9600);
       receiver.enableIRIn();
     }
 
     void update() {
-      pressedKeyName = nullptr; // Immer zurücksetzen
-
+      static long pressDelay = millis();
+       // Immer zurücksetzen
+      pressedKeyName = nullptr;  
+      if(!(millis() - pressDelay >= 150)) return; 
+        
       if (!receiver.decode()) return;
 
       this->command = receiver.decodedIRData.command;
@@ -55,9 +57,8 @@ class Remote {
           break;
         }
       }
-      delay(100);
       receiver.resume();
-      
+      pressDelay = millis();
     }
 
     void printPressedKey() {
