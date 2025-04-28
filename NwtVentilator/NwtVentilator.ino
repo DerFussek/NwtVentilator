@@ -9,6 +9,11 @@ const short trafficlightRED = 12;
 const short trafficlightYELLOW = 11;
 const short trafficlightGREEN = 13;
 
+//Statusinformation
+bool automatic = false;
+bool off = true;
+bool manual = false;
+
 
 void setup() {
   Serial.begin(9600); //Serieller Monitor starten
@@ -39,11 +44,17 @@ void readRemote() {
     Dabei hat jede taste einen individuellen HEX-Code den es nur einmal gibt.
   */
   if(command == 0x45) { //Taste "A"
-    TrafficlightON();
+    TrafficlightAUTOMATISCH();
+    automatic = true;
+    manual = off = false;
   } else if(command == 0x47) { //Taste "B"
     TrafficlightOFF();
+    off = true;
+    manual = automatic = false;
   } else if(command == 0x09) { //Taste "C"
     TrafficlightMANUAL();
+    manual = true;
+    automatic = off = false;
   }
 
 
@@ -54,7 +65,7 @@ void readRemote() {
 /*
   Die folgenden drei Funktionen geben an Welche Lampen leuchten sollen, wenn der Ventilator An, Aus, oder im manuellen Modus ist. 
 */
-void TrafficlightON() {
+void TrafficlightAUTOMATISCH() {
   digitalWrite(trafficlightGREEN, HIGH);
   digitalWrite(trafficlightRED, LOW);
   digitalWrite(trafficlightYELLOW, LOW);
