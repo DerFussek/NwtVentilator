@@ -1,13 +1,66 @@
+//===================================================//
+//                   Einstellungen                   //
+//===================================================//
 
-//Fernbedinung
+//*****************Fernbedinung**********************//
 #include <IRremote.h>
-const short remotePIN = 22;
+const short int remotePIN = 22;
+
 IRrecv remote(remotePIN);
 
-//AMPEL DISPLAY
-const short trafficlightRED = 12;
-const short trafficlightYELLOW = 11;
-const short trafficlightGREEN = 13;
+//*****************Ampelanzeige**********************//
+const short int trafficlightRED = 12;
+const short int trafficlightYELLOW = 11;
+const short int trafficlightGREEN = 13;
+
+//*****************Schrittmotoren*********************//
+//Generelle Konfigurationen (für beide Motoren gleich)
+#include "A4988.h"
+
+const short int STEPS = 200;     
+const short int microSTEPS = 16;
+const short int RPM = 120;
+
+//Schrittmotor 1 (Pinbelegungnen für den ersten Schrittmotor)
+const short int s1_DIR = 2;
+const short int s1_STEP = 3;
+const short int s1_SLEEP = 4;
+const short int s1_MS1 = 7;
+const short int s1_MS2 = 6;
+const short int s1_MS3 = 5; 
+
+A4988 stepper1(STEPS, s1_DIR, s1_STEP, s1_SLEEP, s1_MS1, s1_MS2, s1_MS3);
+
+//Schrittmotor 2 (Pinbelegungnen für den zweiten Schrittmotor)
+const short int s1_DIR = 2;
+const short int s1_STEP = 3;
+const short int s1_SLEEP = 4;
+const short int s1_MS1 = 7;
+const short int s1_MS2 = 6;
+const short int s1_MS3 = 5; 
+
+A4988 stepper2(STEPS, s2_DIR, s2_STEP, s2_SLEEP, s2_MS1, s2_MS2, s2_MS3);
+
+//***************Gleichschrittmotor*******************//
+const short int gsm_IN1;
+const short int gsm_IN2;
+const short int gsm_IN3;
+const short int gsm_IN4;
+
+const short int gsm_SPEED;
+
+//***************Ultraschallsensoren*******************//
+//TODO
+
+//***************Oled-Display*******************//
+//TODO
+
+//===================================================//
+//               Variablen & Objekte                 //
+//===================================================//
+
+//Fernbedinung
+
 
 //Statusinformation
 bool automatic = false;
@@ -15,6 +68,9 @@ bool off = true;
 bool manual = false;
 
 
+//===================================================//
+//                   Programmstart                   //
+//===================================================//
 void setup() {
   Serial.begin(9600); //Serieller Monitor starten
   

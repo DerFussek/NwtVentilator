@@ -39,8 +39,7 @@ class DisplayManager {
   public:
     
     DisplayManager(int TrafficLightPINS[3])
-      : trafficlight(TrafficLightPINS[0], TrafficLightPINS[1], TrafficLightPINS[2])
-    {
+      : trafficlight(TrafficLightPINS[0], TrafficLightPINS[1], TrafficLightPINS[2]) {
       pinMode(trafficlight.RED, OUTPUT);
       pinMode(trafficlight.YELLOW, OUTPUT);
       pinMode(trafficlight.GREEN, OUTPUT);
