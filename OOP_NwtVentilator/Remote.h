@@ -15,49 +15,34 @@ class Remote {
 
   public:
     void start() {
-      remote.enableIRIN();
+      remote.enableIRIn();
     }
 
     Button awaitInput(int pressDelayMs) {
-      static long pressDelay = millis();
+    static long pressDelay = millis();
 
-      if(remote.decodedIRData.flags & IRDATA_FLAGS_IS_REPEAT) return;
-      if(!remote.decode()) return;
-      if(!(millis() - pressDelay) >= pressDelayMs) return;
-
-      pressDelay = millis();
-
-      unsigned long command = remote.decodedIRData.command;
-
-      if(command == 0x45) {  //Taste "A"
-        command = "";
+    if (!remote.decode())                           
+        return NONE;
+    
+    if (remote.decodedIRData.flags & IRDATA_FLAGS_IS_REPEAT) {
         remote.resume();
-
-        return A;
-      } else if(command == 0x47) { //Taste "B"
-        command = "";
-        remote.resume();
-
-        return B;
-      } else if(command == 0x09) { //Taste "C"
-        command = "";
-        remote.resume();
-        return C;
-      } else if(command == 0x46) { //Taste "UP"
-        command = "";
-        remote.resume();
-
-        return UP;
-      } else if(command == 0x15) { //Taste "DOWN" 
-        command = "";
-        remote.resume();
-
-        return DOWN;
-      } 
-
-      command = "";
-      remote.resume();
-      return NONE;
-      
+        return NONE;
     }
+    
+    if (millis() - pressDelay < pressDelayMs) return NONE;
+
+    pressDelay = millis();                          
+    unsigned long command = remote.decodedIRData.command;
+    remote.resume();
+
+    switch (command) {
+      case 0x45: return A;   // Taste "A"
+      case 0x47: return B;   // Taste "B"
+      case 0x09: return C;   // Taste "C"
+      case 0x46: return UP;  // Taste "UP"
+      case 0x15: return DOWN;// Taste "DOWN"
+      default:    return NONE;
+    }
+}
+
 };

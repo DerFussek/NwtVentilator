@@ -4,20 +4,20 @@
 
 //*****************Fernbedinung**********************//
 #include <IRremote.h>
-const short int remotePIN = 22;
+const short int remotePIN = 13;
 
 
 IRrecv remote(remotePIN);
 
 //*****************Ampelanzeige**********************//
-const short int trafficlightRED = 12;
-const short int trafficlightYELLOW = 11;
-const short int trafficlightGREEN = 13;
+const short int trafficlightRED = 9;
+const short int trafficlightYELLOW = 10;
+const short int trafficlightGREEN = 11;
 
 //*******************Ringled************************//
 #include <Adafruit_NeoPixel.h>
-const short int ringLED = 6;  //Pin an dem die Ringled angeschlossen ist
-const short int numberLEDS = 16;
+const short int ringLED = 12;  //Pin an dem die Ringled angeschlossen ist
+const short int numberLEDS = 8;
 
 int ringLedColor[3] = {255, 0, 0};
 
