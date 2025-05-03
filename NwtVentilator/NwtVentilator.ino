@@ -6,12 +6,22 @@
 #include <IRremote.h>
 const short int remotePIN = 22;
 
+
 IRrecv remote(remotePIN);
 
 //*****************Ampelanzeige**********************//
 const short int trafficlightRED = 12;
 const short int trafficlightYELLOW = 11;
 const short int trafficlightGREEN = 13;
+
+//*******************Ringled************************//
+#include <Adafruit_NeoPixel.h>
+const short int ringLED = 6;  //Pin an dem die Ringled angeschlossen ist
+const short int numberLEDS = 16;
+
+int ringLedColor[3] = {255, 0, 0};
+
+Adafruit_NeoPixel ring(numberLEDS, ringLED, NEO_GRB + NEO_KHZ800);
 
 //*****************Schrittmotoren*********************//
 //Generelle Konfigurationen (für beide Motoren gleich)
@@ -29,15 +39,17 @@ const short int s1_MS1 = 7;
 const short int s1_MS2 = 6;
 const short int s1_MS3 = 5; 
 
+const short int s1_STOPP;
+
 A4988 stepper1(STEPS, s1_DIR, s1_STEP, s1_SLEEP, s1_MS1, s1_MS2, s1_MS3);
 
 //Schrittmotor 2 (Pinbelegungnen für den zweiten Schrittmotor)
-const short int s1_DIR = 2;
-const short int s1_STEP = 3;
-const short int s1_SLEEP = 4;
-const short int s1_MS1 = 7;
-const short int s1_MS2 = 6;
-const short int s1_MS3 = 5; 
+const short int s2_DIR = 2;
+const short int s2_STEP = 3;
+const short int s2_SLEEP = 4;
+const short int s2_MS1 = 7;
+const short int s2_MS2 = 6;
+const short int s2_MS3 = 5; 
 
 A4988 stepper2(STEPS, s2_DIR, s2_STEP, s2_SLEEP, s2_MS1, s2_MS2, s2_MS3);
 
@@ -56,16 +68,15 @@ const short int gsm_SPEED;
 //TODO
 
 //===================================================//
-//               Variablen & Objekte                 //
+//           Projekt Variablen & Objekte             //
 //===================================================//
-
-//Fernbedinung
-
 
 //Statusinformation
 bool automatic = false;
 bool off = true;
 bool manual = false;
+
+unsigned short int stufe = 1;
 
 
 //===================================================//
@@ -80,17 +91,26 @@ void setup() {
   pinMode(trafficlightRED, OUTPUT);
   pinMode(trafficlightYELLOW, OUTPUT);
   pinMode(trafficlightGREEN, OUTPUT);
+
+  //Ring-LED
+  ring.begin();
+  ring.show();
 }
 
 void loop() {
   readRemote();
+  LedRing();
+  Serial.println(stufe);
 }
 
 void readRemote() {
   static long pressDelay = millis();
 
-  if(!remote.decode() || !(millis() - pressDelay >= 150)) return; //Wenn der Empfänger nichts empfangen hat oder noch keine 150ms 
-                                                                  //nach dem letzen knopfdruck vergangen sind, kann/wird der Empänger nicht ausgelesen
+  if(remote.decodedIRData.flags & IRDATA_FLAGS_IS_REPEAT) return;
+  if(!remote.decode() || !(millis() - pressDelay >= 500)) return; //Wenn der Empfänger nichts empfangen hat oder noch keine 150ms 
+  
+
+  pressDelay = millis(); //Delay wird zurückgesetzt                                                                 //nach dem letzen knopfdruck vergangen sind, kann/wird der Empänger nicht ausgelesen
   
   unsigned long command = remote.decodedIRData.command; //Ausgabe des Empfängers wird in der Variable command gespeichert(in HEX).
 
@@ -103,19 +123,35 @@ void readRemote() {
     TrafficlightAUTOMATISCH();
     automatic = true;
     manual = off = false;
+
+    ringLedColor[0] = 0;
+    ringLedColor[1] = 128;
+    ringLedColor[2] = 0;
   } else if(command == 0x47) { //Taste "B"
     TrafficlightOFF();
     off = true;
     manual = automatic = false;
+
+    ringLedColor[0] = 128;
+    ringLedColor[1] = 0;
+    ringLedColor[2] = 0;
   } else if(command == 0x09) { //Taste "C"
     TrafficlightMANUAL();
     manual = true;
     automatic = off = false;
+
+    ringLedColor[0] = 128;
+    ringLedColor[1] = 64;
+    ringLedColor[2] = 0;
+  } else if(command == 0x46) { //Taste "UP"
+    stufe++;
+  } else if(command == 0x15) { //Taste "DOWN" 
+    stufe--;
   }
-
-
+  command = "";
+  
   remote.resume(); //Empänger wartet auf das nächste Signal
-  pressDelay = millis(); //Delay wird zurückgesetzt
+   
 }
 
 /*
@@ -137,4 +173,20 @@ void TrafficlightMANUAL() {
   digitalWrite(trafficlightGREEN, LOW);
   digitalWrite(trafficlightRED, LOW);
   digitalWrite(trafficlightYELLOW, HIGH);
+}
+
+void LedRing() {
+    static long pressDelay = millis();
+    if(!(millis() - pressDelay >= 200)) return;
+    pressDelay = millis();
+
+    ring.clear();
+    int ledProStufe = numberLEDS / 6;
+
+    for(int i = 0; i < stufe * ledProStufe; i++) {
+      ring.setPixelColor(i, ring.Color(ringLedColor[0], ringLedColor[1], ringLedColor[2]));
+    } 
+
+    
+    ring.show();
 }
