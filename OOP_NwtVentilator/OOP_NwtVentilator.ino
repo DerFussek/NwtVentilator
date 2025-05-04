@@ -69,8 +69,13 @@ DcMotor gsm(in1, in2, in3, in4, speed);
 #define TFT_SCLK  31
 UserInterface display(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
 
+//******************Andere*******************//
+#include "Messager.h"
+Modus currentModus;
+Modus lastModus;
+
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   ampelDisplay.begin();
   remote.start();
   ledStrip.begin();
@@ -82,23 +87,35 @@ void setup() {
 }
 
 int stufe = 0;
+int lastStufe;
+
 void loop() {
   
-  Button b = remote.awaitInput(500);
+  Button b = remote.awaitInput(250);
 
   if(b == A) {
     ampelDisplay.Automatic();
+    stufe = 1;
+    currentModus = ON;
   } else if(b == B) {
     ampelDisplay.Off();
+    stufe = 0;
+    currentModus = OFF;
   } else if(b == C) {
     ampelDisplay.Manual();
+    currentModus = MANUAL;
   } else if(b == UP) {
     ++stufe;
   } else if(b == DOWN) {
     --stufe;
   }
 
-  ledStrip.Level(stufe, 0);
-
+  if (stufe != lastStufe || currentModus != lastModus) {
+    lastStufe  = stufe;
+    lastModus  = currentModus;
+    ledStrip.Level(stufe, 0);
+    Messager.sender.send(currentModus, stufe);
+  }
+  
   display.updateDynamicUserInterface(1000, stufe);
 }
