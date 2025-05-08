@@ -2,7 +2,7 @@
 #include "A4988.h"
 
 class Nema17 {
-  private:
+  protected:
     const short int STEPS = 200;     
     const short int MICROSTEPS = 16;
     
@@ -16,13 +16,14 @@ class Nema17 {
 
     short int stop;
 
-    A4988 stepper;
+  protected:  
+    A4988 motor;
 
     short int position;
 
   public:
     Nema17(int RPM, const int dir, const int step, const int sleep, const int ms1, const int ms2, const int ms3, const int stop) 
-      : stepper(this->STEPS, dir, step, sleep, ms1, ms2, ms3) {
+      : motor(this->STEPS, dir, step, sleep, ms1, ms2, ms3) {
       this->RPM = RPM;
       this->dir = dir;
       this->step = step;
@@ -33,10 +34,10 @@ class Nema17 {
       this->stop = stop;
     }
 
-    void begin() {
-      this->stepper.begin(this->RPM, this->MICROSTEPS);
-      this->stepper.enable();
-      this->stepper.setSpeedProfile(stepper.LINEAR_SPEED);
+    virtual void begin() {
+      this->motor.begin(this->RPM, this->MICROSTEPS);
+      this->motor.enable();
+      this->motor.setSpeedProfile(motor.CONSTANT_SPEED);
     }
 
     //TODO
