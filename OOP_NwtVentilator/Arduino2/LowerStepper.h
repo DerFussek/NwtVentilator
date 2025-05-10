@@ -17,8 +17,10 @@ class LowerStepper : public Nema17 {
       if (instance != nullptr) {
         instance->motor.disable();  // Zugriff auf das Objekt
         delay(500);
+        instance->motor.setSpeedProfile(instance->motor.CONSTANT_SPEED);
+        instance->motor.setRPM(20);
         instance->motor.enable();
-        instance->motor.rotate(-20);
+        instance->motor.rotate(-25);
         instance->motor.disable();
         stopSignal = true;
       }
@@ -88,6 +90,31 @@ class LowerStepper : public Nema17 {
       delay(2500);
       while(digitalRead(this->stop)) {}
       while(!digitalRead(this->stop)) {}
+    }
+
+    void test2() {
+      float steps = 120; //(360/6)/2 * 4
+       
+      motor.setSpeedProfile(motor.LINEAR_SPEED);
+      Serial.println("3x hin und her");
+        motor.setRPM(60);
+        for(int i = 0; i < 1; i++) {
+          motor.enable();
+          motor.rotate(-steps);
+          motor.disable();
+          delay(250);
+        } 
+
+        for(int i = 0; i < 1; i++) {
+          motor.enable();
+          motor.rotate(steps);
+          motor.disable();
+          delay(250);
+        } 
+      
+      motor.stop();
+      motor.disable();
+      delay(500);
     }
 
     public:

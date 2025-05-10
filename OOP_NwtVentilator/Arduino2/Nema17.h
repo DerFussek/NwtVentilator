@@ -36,7 +36,7 @@ class Nema17 {
 
     virtual void begin() {
       this->motor.begin(this->RPM, this->MICROSTEPS);
-      this->motor.enable();
+      this->motor.disable();
       this->motor.setSpeedProfile(motor.CONSTANT_SPEED);
     }
 
