@@ -3,9 +3,12 @@
 
 class Nema17 {
   protected:
+    
+    //Konstante Parameter
     const short int STEPS = 200;     
     const short int MICROSTEPS = 16;
     
+    //Motoranschlüsse 
     short int RPM;
     short int dir;
     short int step;
@@ -14,11 +17,12 @@ class Nema17 {
     short int ms2;
     short int ms3;
 
+    //Button für Motorstopp
     short int stop;
 
   protected:  
-    A4988 motor;
 
+    A4988 motor;  //Motorobjekt
     short int position;
 
   public:

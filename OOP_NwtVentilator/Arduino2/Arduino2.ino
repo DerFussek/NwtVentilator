@@ -1,3 +1,4 @@
+#include "Arduino.h"
 #include "A4988.h"
 #include "LowerStepper.h"
 #define MOTOR_STEPS 200
@@ -11,7 +12,7 @@
 #define MS2 9
 #define MS3 10
 
-#define STOPP 21  // INT4 — höchste Interrupt-Priorität auf Mega
+#define STOPP 21  //Pin 21 hat die höchste Interrupt-Priorität auf dem Arduino-Mega
 
 LowerStepper stepper(RPM, DIR, STEP, SLEEP, MS1, MS2, MS3, STOPP);
 
@@ -29,26 +30,97 @@ LowerStepper stepper(RPM, DIR, STEP, SLEEP, MS1, MS2, MS3, STOPP);
 #include "GSM.h"
 //GSM gsm(12, 11, 10, 9, 8);
 
+//=========US-Sensoren=========//
+struct Sensor {
+  uint8_t trig;
+  uint8_t echo;
+};
+
+Sensor sensoren[6] = {{22,23}, {24,25}, {26,27}, {28,29}, {30,31}, {32,33}};
+long messwerte[12];
+int winkel = 0;
+const int MAX_DISTANZ = 80; //[in cm]
+
+
 void setup() {
   Serial.begin(9600);
   pinMode(STOPP, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(STOPP), LowerStepper::stopInterrupt, FALLING);
 
+  
+    for (int i = 0; i < 6; i++) {
+      pinMode(sensoren[i].trig, OUTPUT);
+      pinMode(sensoren[i].echo, INPUT);
+    }
+  
+
   //stepper2.begin();
   stepper.begin();
+  //stepper.test2();
   //gsm.begin();
 
   
 }
 
 void loop() {
-  //gsm.enable();
-  //gsm.rotate(255, 0);
-  //delay(5000);
-  
-  
-  stepper.test2();
-  //stepper.test();
-  //stepper.getStepper().rotate(90);
-  //delay(5000);
+  winkel = 0;
+
+  for (int s = 0; s < 6; s++) {
+    messwerte[winkel++] = gefilterteMessung(sensoren[s].trig, sensoren[s].echo);
+    delay(50);
+  }
+
+  delay(500);
+  stepper.move(120);
+
+  Serial.println("Messungen:");
+  for (int s = 0; s < 6; s++) {
+    messwerte[winkel++] = gefilterteMessung(sensoren[s].trig, sensoren[s].echo);
+    delay(50);
+  }
+
+  for(int i=0; i<12; i++) {
+    if(i==6) Serial.println("2.Druchgang:");
+    Serial.println(messwerte[i]);
+  }
+  delay(500);
+  stepper.move(-120);
+
+  int minIndex = -1;
+  for (int i = 0; i < 12; i++) {
+    if (messwerte[i] >= 0 && messwerte[i] <= MAX_DISTANZ) {
+      if (minIndex == -1 || messwerte[i] < messwerte[minIndex]) {
+        minIndex = i;
+      }
+    }
+  }
+
+  if (minIndex == -1) {
+    Serial.println("Kein Hindernis erkannt");
+  } else {
+    int richtung = minIndex * 30;
+    Serial.print("Hindernis in Richtung: ");
+    Serial.print(richtung);
+    Serial.println("°");
+  }
+
+  delay(1000);
 }
+
+long messung(uint8_t trigPin, uint8_t echoPin) {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  long dauer = pulseIn(echoPin, HIGH, 30000);
+  long entfernung = dauer * 0.034 / 2;
+  return entfernung;
+}
+
+long gefilterteMessung(uint8_t trig, uint8_t echo) {
+  long d = messung(trig, echo);
+  return (d <= MAX_DISTANZ) ? d : -1;
+}
+
+
