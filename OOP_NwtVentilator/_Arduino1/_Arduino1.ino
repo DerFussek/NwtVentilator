@@ -41,6 +41,14 @@ DS3231 myRTC;
 bool h12, PM, century;
 String wochentag[7] {"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"};
 
+//Messager
+#include "HardwareSerial.h"
+#include <stdint.h>
+enum Modus {OFF = 0, ON = 1, MANUAL = 2};
+Modus currentModus;
+Modus lastModus;
+//...
+
 void setup() {
   
   //Ampelanzeige
@@ -60,13 +68,12 @@ void setup() {
   drawStaticUserInterface();
 }
 
-Modus currentModus;
-Modus lastModus;
+
 int stufe = 0;
 int lastStufe;
 
 void loop() {
-  Button b = remote.awaitInput(250);
+  Button b = awaitInput(250);
 
   if(b == A) {
     Automatic();
