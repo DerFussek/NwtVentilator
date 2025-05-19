@@ -28,7 +28,7 @@ class LowerStepper : public Nema17 {
     }
 
     void stepperToReferencePoint () {
-      motor.setRPM(20);
+      motor.setRPM(10);
       motor.enable();
       motor.setSpeedProfile(motor.CONSTANT_SPEED);
 

@@ -42,8 +42,8 @@ struct MessagerClass {
   Receiver receiver;
 
   MessagerClass()
-    : sender(Serial1, 9600)
-    , receiver(Serial1, 9600)
+    : sender(Serial2, 9600)
+    , receiver(Serial2, 9600)
   {}
 };
 

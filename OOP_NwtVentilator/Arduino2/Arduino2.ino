@@ -44,6 +44,8 @@ const int MAX_DISTANZ = 80; //[in cm]
 
 void setup() {
   Serial.begin(9600);
+  Serial2.begin(9600);
+  Serial.println("Hallo");
   pinMode(STOPP, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(STOPP), LowerStepper::stopInterrupt, FALLING);
 
@@ -53,58 +55,104 @@ void setup() {
       pinMode(sensoren[i].echo, INPUT);
     }
   
-
-  //stepper2.begin();
   stepper.begin();
-  //stepper.test2();
-  //gsm.begin();
-
-  
 }
 
+#include "Messager.h"
+Modus m = NONE;
+Modus lastModus;
+Modus tempModus;
+bool on = false;
+bool off = true;
+bool manuel;
+
+uint8_t stufe = 0;
+
 void loop() {
-  winkel = 0;
-
-  for (int s = 0; s < 6; s++) {
-    messwerte[winkel++] = gefilterteMessung(sensoren[s].trig, sensoren[s].echo);
-    delay(50);
+  Messager.receiver.read(tempModus, stufe);
+  if(tempModus != lastModus && tempModus != -1) {
+    lastModus = tempModus;
+    m = lastModus;
+    Serial.print("Modus: ");
+    Serial.println(m);
   }
 
-  delay(500);
-  stepper.move(120);
+  
+  if(m == OFF) {  
+    on = false;
+    manuel = false;
+    
+    off = true;
+    stufe = 0;
+    
+  } else if(m == ON) {
+    off = false;
+    manuel = false;
 
-  Serial.println("Messungen:");
-  for (int s = 0; s < 6; s++) {
-    messwerte[winkel++] = gefilterteMessung(sensoren[s].trig, sensoren[s].echo);
-    delay(50);
-  }
+    on = true;
+    stufe = 1;
+  } else if(m == MANUAL) {
+    on = false;
+    off = false;
 
-  for(int i=0; i<12; i++) {
-    if(i==6) Serial.println("2.Druchgang:");
-    Serial.println(messwerte[i]);
-  }
-  delay(500);
-  stepper.move(-120);
+    manuel = true;
+    stufe = 1;
+  } 
+  delay(250);
 
-  int minIndex = -1;
-  for (int i = 0; i < 12; i++) {
-    if (messwerte[i] >= 0 && messwerte[i] <= MAX_DISTANZ) {
-      if (minIndex == -1 || messwerte[i] < messwerte[minIndex]) {
-        minIndex = i;
+  if(on) {
+    winkel = 0;
+
+    for (int s = 0; s < 6; s++) {
+      messwerte[winkel++] = gefilterteMessung(sensoren[s].trig, sensoren[s].echo);
+      delay(50);
+    }
+
+    delay(500);
+    stepper.move(120);
+
+    Serial.println("Messungen:");
+    for (int s = 0; s < 6; s++) {
+      messwerte[winkel++] = gefilterteMessung(sensoren[s].trig, sensoren[s].echo);
+      delay(50);
+    }
+
+    for(int i=0; i<12; i++) {
+      if(i==6) Serial.println("2.Druchgang:");
+      Serial.println(messwerte[i]);
+    }
+    delay(500);
+    stepper.move(-120);
+
+    int minIndex = -1;
+    for (int i = 0; i < 12; i++) {
+      if (messwerte[i] >= 0 && messwerte[i] <= MAX_DISTANZ) {
+        if (minIndex == -1 || messwerte[i] < messwerte[minIndex]) {
+          minIndex = i;
+        }
       }
     }
-  }
 
-  if (minIndex == -1) {
-    Serial.println("Kein Hindernis erkannt");
+    if (minIndex == -1) {
+      Serial.println("Kein Hindernis erkannt");
+    } else {
+      int richtung = minIndex * 30;
+      Serial.print("Hindernis in Richtung: ");
+      Serial.print(richtung);
+      Serial.println("°");
+    }
+    
+    //stepper.stepperToReferencePoint();
+    delay(2000);
+
+  } else if(off) {
+
+  } else if(manuel) {
+
   } else {
-    int richtung = minIndex * 30;
-    Serial.print("Hindernis in Richtung: ");
-    Serial.print(richtung);
-    Serial.println("°");
-  }
 
-  delay(1000);
+  }
+  
 }
 
 long messung(uint8_t trigPin, uint8_t echoPin) {

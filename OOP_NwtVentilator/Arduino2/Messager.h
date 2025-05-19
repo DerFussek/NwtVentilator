@@ -1,7 +1,7 @@
 #pragma once
 #include "HardwareSerial.h"
 #include <stdint.h>
-enum Modus {OFF = 0, ON = 1, MANUAL = 2};
+enum Modus {OFF = 0, ON = 1, MANUAL = 2, NONE = 3};
 
 class Sender {
   private:
@@ -42,8 +42,8 @@ struct MessagerClass {
   Receiver receiver;
 
   MessagerClass()
-    : sender(Serial1, 9600)
-    , receiver(Serial1, 9600)
+    : sender(Serial2, 9600)
+    , receiver(Serial2, 9600)
   {}
 };
 
