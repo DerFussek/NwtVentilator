@@ -37,7 +37,6 @@ class UserInterface {
 
     void drawStaticUserInterface() {
       tft.fillScreen(ST77XX_BLACK); //Displayinhalt löschen
-      
 
       tft.setTextColor(tft.color565(0, 255, 165));
       tft.setTextSize(4);
@@ -93,7 +92,7 @@ class UserInterface {
       //Wochentag
       tft.setTextColor(tft.color565(255, 255, 255));  //Textfarbe festlegen
       tft.setTextSize(1);                             //Textgröße festlegen
-
+      
       String DowTxt = wochentag[myRTC.getDoW()]; //aktuellen Wochentag abfragen und dessen abkürzung in einem String speichern
 
       int16_t _DowX, _DowY;
@@ -165,8 +164,6 @@ class UserInterface {
       if(uhrTxt != lastTime) {
         lastTime = uhrTxt;
 
-        
-
         // Hintergrundfläche für Uhrzeit löschen
         tft.fillRect(0, 85, 128, 35, ST77XX_BLACK);
 
@@ -182,22 +179,25 @@ class UserInterface {
         tft.setCursor(uhrX, uhrY);
         tft.print(uhrTxtC);
 
-      } else if(abs(temp - lastTemp) > 1) {
-        lastTemp = temp;
-        float minTemp = 0;
-        float maxTemp = 40;
-        float winkelF = map(temp, minTemp, maxTemp, 0, 360);
-        int winkel = constrain(round(winkelF), 0, 360);
+        if(abs(temp - lastTemp) >= 1) {
+          lastTemp = temp;
+          float minTemp = 0;
+          float maxTemp = 40;
+          float winkelF = map(temp, minTemp, maxTemp, 0, 360);
+          int winkel = constrain(round(winkelF), 0, 360);
 
-        tft.fillRect(76, 18, 2*20, 2*20, ST7735_BLACK);
-        tft.fillCircle(96, 38, 20, tft.color565(0, 25, 50));
-        tft.fillCircle(96, 38, 20 - 3, tft.color565(0, 0, 0));
-        drawArc(96, 38, 20, 0, winkel, 3, tft.color565(0, 128, 255));
-        tft.setTextSize(2);
-        tft.setTextColor(tft.color565(255, 255, 255));
-        tft.setCursor(86, 32);
-        tft.println(temp);
-      } else if(level != lastLevel) {
+          tft.fillRect(76, 18, 2*20, 2*20, ST7735_BLACK);
+          tft.fillCircle(96, 38, 20, tft.color565(0, 25, 50));
+          tft.fillCircle(96, 38, 20 - 3, tft.color565(0, 0, 0));
+          drawArc(96, 38, 20, 0, winkel, 3, tft.color565(0, 128, 255));
+          tft.setTextSize(2);
+          tft.setTextColor(tft.color565(255, 255, 255));
+          tft.setCursor(86, 32);
+          tft.println(temp);
+        } 
+      } 
+      
+      if(level != lastLevel) {
         lastLevel = level;
         float winkelF = map(level, 0, 4, 0, 360);
         int winkel = constrain(round(winkelF), 0, 360);

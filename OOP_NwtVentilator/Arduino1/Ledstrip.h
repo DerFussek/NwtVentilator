@@ -5,7 +5,9 @@ class Ledstrip {
   private:
     short int pin;
     short int numberLeds;
+    
     Adafruit_NeoPixel strip;
+
     byte numberOfLevels;
     byte stripColor[3] = {16, 16, 16};
 
@@ -25,6 +27,7 @@ class Ledstrip {
       static long updateDelay = millis();
       if(!(millis() - updateDelay >= updateDelayMs)) return;
       updateDelay = millis();
+
 
       this->strip.clear();
       int ledPerStage = this->numberLeds / this->numberOfLevels;

@@ -21,9 +21,8 @@ class Remote {
     Button awaitInput(int pressDelayMs) {
       static long pressDelay = millis();
 
-      if (!remote.decode())                           
-          return NONE;
-      
+      if (!remote.decode()) return NONE; 
+
       if (remote.decodedIRData.flags & IRDATA_FLAGS_IS_REPEAT) {
           remote.resume();
           return NONE;
@@ -32,7 +31,7 @@ class Remote {
       if (millis() - pressDelay < pressDelayMs) return NONE;
 
       pressDelay = millis();                          
-      unsigned long command = remote.decodedIRData.command;
+      unsigned long command = remote.decodedIRData.command; 
       remote.resume();
 
       switch (command) {

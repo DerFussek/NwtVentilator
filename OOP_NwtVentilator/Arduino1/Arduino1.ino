@@ -55,6 +55,7 @@ void setup() {
   
   ledStrip.begin();
   display.begin();
+
 }
 
 int stufe = 0;
@@ -81,11 +82,12 @@ void loop() {
     --stufe;
   }
 
-  if (stufe != lastStufe || currentModus != lastModus) {
+  //
+  if(stufe != lastStufe || currentModus != lastModus) {
     lastStufe  = stufe;
     lastModus  = currentModus;
     ledStrip.Level(stufe, 0);
-    Messager.sender.send(currentModus, stufe);
+    //Messager.sender.send(currentModus, stufe);
   }
   
   display.updateDynamicUserInterface(1000, stufe);

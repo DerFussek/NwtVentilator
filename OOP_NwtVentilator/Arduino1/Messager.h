@@ -32,8 +32,10 @@ class Receiver {
   }
 
   void read(Modus &outMode, uint8_t &outSpeed) {
-    outMode  = static_cast<Modus>(serialPort.read());
-    outSpeed = serialPort.read();
+    if(Serial.available() > 0) {
+      outMode  = static_cast<Modus>(serialPort.read());
+      outSpeed = serialPort.read();
+    }
   }
 };
 

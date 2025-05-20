@@ -3,7 +3,6 @@
 
 class Nema17 {
   protected:
-    
     //Konstante Parameter
     const short int STEPS = 200;     
     const short int MICROSTEPS = 16;

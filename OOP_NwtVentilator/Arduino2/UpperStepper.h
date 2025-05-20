@@ -9,7 +9,6 @@ class UpperStepper : public Nema17 {
     }
 
     void begin() {
-     
       motor.setSpeedProfile(motor.CONSTANT_SPEED);
       motor.setRPM(10);
       
