@@ -5,28 +5,28 @@
 #define MICROSTEPS 16
 #define RPM 20
 
-#define DIR 13
-#define STEP 12
-#define SLEEP 11
-#define MS1 8
-#define MS2 9
-#define MS3 10
+#define DIR 8
+#define STEP 7
+#define SLEEP 6
+#define MS1 5
+#define MS2 4
+#define MS3 3
 
-#define STOPP 21  //Pin 21 hat die höchste Interrupt-Priorität auf dem Arduino-Mega
+#define STOPP 2  //Pin 21 hat die höchste Interrupt-Priorität auf dem Arduino-Mega
 
 LowerStepper stepper(RPM, DIR, STEP, SLEEP, MS1, MS2, MS3, STOPP);
 
 #include "UpperStepper.h"
 
-#define upper_DIR 2
-#define upper_STEP 3
-#define upper_SLEEP 4
-#define upper_MS3 7
-#define upper_MS2 6
-#define upper_MS1 5
+#define upper_DIR 27
+#define upper_STEP 26
+#define upper_SLEEP 25
+#define upper_MS3 24
+#define upper_MS2 23
+#define upper_MS1 22
 
-//UpperStepper stepper2(RPM, upper_DIR, upper_STEP, upper_SLEEP, upper_MS1, upper_MS2, upper_MS3);
-
+UpperStepper stepper2(RPM, upper_DIR, upper_STEP, upper_SLEEP, upper_MS1, upper_MS2, upper_MS3);
+int position = 0;
 #include "GSM.h"
 //GSM gsm(12, 11, 10, 9, 8);
 
@@ -36,11 +36,12 @@ struct Sensor {
   uint8_t echo;
 };
 
-Sensor sensoren[6] = {{22,23}, {24,25}, {26,27}, {28,29}, {30,31}, {32,33}};
+Sensor sensoren[6] = {{43, 42}, {45, 44}, {47, 46}, {48, 49}, {50, 51}, {41,40}};
 long messwerte[12];
+long _messwerte[12];
 int winkel = 0;
 const int MAX_DISTANZ = 80; //[in cm]
-
+int grad[12] = {0, 60, 120, 180, 240, 300, 30, 90, 150, 210, 270, 330};
 
 void setup() {
   Serial.begin(9600);
@@ -55,6 +56,8 @@ void setup() {
       pinMode(sensoren[i].echo, INPUT);
     }
   
+  stepper2.begin();
+  stepper2.test();
   stepper.begin();
 }
 
@@ -70,89 +73,113 @@ uint8_t stufe = 0;
 
 void loop() {
   Messager.receiver.read(tempModus, stufe);
-  if(tempModus != lastModus && tempModus != -1) {
+  if (tempModus != lastModus && tempModus != -1) {
     lastModus = tempModus;
     m = lastModus;
     Serial.print("Modus: ");
     Serial.println(m);
   }
 
-  
-  if(m == OFF) {  
+  if (m == OFF) {
     on = false;
     manuel = false;
-    
     off = true;
     stufe = 0;
-    
-  } else if(m == ON) {
+  } else if (m == ON) {
     off = false;
     manuel = false;
-
     on = true;
     stufe = 1;
-  } else if(m == MANUAL) {
+  } else if (m == MANUAL) {
     on = false;
     off = false;
-
     manuel = true;
     stufe = 1;
-  } 
+  }
+
   delay(250);
 
-  if(on) {
-    winkel = 0;
+  if (true) {
+    const int SENSOREN = 6;
+    long messrunde1[SENSOREN];
+    long messrunde2[SENSOREN];
+    int grad[6] = {0, 60, 120, 180, 240, 300};
 
-    for (int s = 0; s < 6; s++) {
-      messwerte[winkel++] = gefilterteMessung(sensoren[s].trig, sensoren[s].echo);
+    // Messung in Startposition (0°)
+    for (int i = 0; i < SENSOREN; i++) {
+      messrunde1[i] = messung(sensoren[i].trig, sensoren[i].echo);
       delay(50);
     }
 
-    delay(500);
-    stepper.move(120);
+    // Drehen auf +120°
+    //stepper.move(120);
+    delay(100);
 
-    Serial.println("Messungen:");
-    for (int s = 0; s < 6; s++) {
-      messwerte[winkel++] = gefilterteMessung(sensoren[s].trig, sensoren[s].echo);
+    // Zweite Messung
+    for (int i = 0; i < SENSOREN; i++) {
+      messrunde2[i] = messung(sensoren[i].trig, sensoren[i].echo);
       delay(50);
     }
 
-    for(int i=0; i<12; i++) {
-      if(i==6) Serial.println("2.Druchgang:");
-      Serial.println(messwerte[i]);
-    }
-    delay(500);
-    stepper.move(-120);
+    // Zurückdrehen auf Ausgangsposition
+    //stepper.move(-120);
+    delay(100);
 
-    int minIndex = -1;
-    for (int i = 0; i < 12; i++) {
-      if (messwerte[i] >= 0 && messwerte[i] <= MAX_DISTANZ) {
-        if (minIndex == -1 || messwerte[i] < messwerte[minIndex]) {
-          minIndex = i;
-        }
+    // Veränderung analysieren
+    int maxDiff = 5;
+    int zielSensor = -1;
+
+    for (int i = 0; i < SENSOREN; i++) {
+      int diff = abs(messrunde1[i] - messrunde2[i]);
+      Serial.print("Sensor ");
+      Serial.print(i);
+      Serial.print(" (");
+      Serial.print(grad[i]);
+      Serial.print("°): ");
+      Serial.print(messrunde1[i]);
+      Serial.print(" cm -> ");
+      Serial.print(messrunde2[i]);
+      Serial.print(" cm => Diff: ");
+      Serial.println(diff);
+
+      if (diff > maxDiff && messrunde2[i] > 0 && messrunde1[i] > 0) {
+        maxDiff = diff;
+        zielSensor = i;
       }
     }
 
-    if (minIndex == -1) {
-      Serial.println("Kein Hindernis erkannt");
-    } else {
-      int richtung = minIndex * 30;
-      Serial.print("Hindernis in Richtung: ");
-      Serial.print(richtung);
+    if (zielSensor != -1) {
+      Serial.print("Bewegung erkannt bei Sensor ");
+      Serial.print(zielSensor);
+      Serial.print(" — Richtung: ");
+      Serial.print(grad[zielSensor]);
       Serial.println("°");
+      movestepper(grad[zielSensor]);
+    } else {
+      Serial.println("Keine signifikante Bewegung erkannt.");
     }
-    
-    //stepper.stepperToReferencePoint();
-    delay(2000);
 
-  } else if(off) {
-
-  } else if(manuel) {
-
-  } else {
+    Serial.print("Motor = ");
+    Serial.println(position);
 
   }
-  
+}
+
+
+void movestepper(int ziel) {
+  int delta = ziel - position;
+
+  // Kürzesten Weg wählen (optional, falls z. B. -270° besser als +90° wäre)
+  if (delta > 180) delta -= 360;
+  if (delta < -180) delta += 360;
+
+  // Schrittmotor ansteuern
+  stepper2.getStepper().enable();
+  stepper2.getStepper().rotate(delta * -1);  // oder z. B. moveDegrees(delta); falls du so eine Methode hast
+
+  // Position aktualisieren (Modulo 360, falls du willst)
+  position = (position + delta) % 360;
+  if (position < 0) position += 360;  // Immer positiv halten
 }
 
 long messung(uint8_t trigPin, uint8_t echoPin) {
@@ -168,7 +195,7 @@ long messung(uint8_t trigPin, uint8_t echoPin) {
 
 long gefilterteMessung(uint8_t trig, uint8_t echo) {
   long d = messung(trig, echo);
-  return (d <= MAX_DISTANZ) ? d : -1;
+  return d;
 }
 
 
