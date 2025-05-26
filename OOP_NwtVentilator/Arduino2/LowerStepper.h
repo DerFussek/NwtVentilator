@@ -34,9 +34,7 @@ class LowerStepper : public Nema17 {
 
       motor.rotate(99999);  // konstante Rechtsdrehung
 
-      while (!stopSignal) {
-        // leer lassen für schnellste Reaktion
-      }
+      while (stopSignal == false) {}
 
       // Stoppen — außerhalb des Interrupts
       motor.stop();

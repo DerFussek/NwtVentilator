@@ -21,18 +21,6 @@ const int numberOfLevels = 4;
 
 Ledstrip ledStrip(stripPin, stripLedNumber, numberOfLevels);
 
-//***************Gleichschrittmotor*******************//
-#include "DcMotor.h"
-const short int in1;
-const short int in2;
-const short int in3;
-const short int in4;
-const short int speed;
-
-DcMotor gsm(in1, in2, in3, in4, speed);
-
-//***************Ultraschallsensoren*******************//
-//TODO
 
 //******************Andere*******************//
 #include "Messager.h"
@@ -46,7 +34,6 @@ void setup() {
   remote.start();
   
   ledStrip.begin();
-  //display.begin();
 
 }
 
@@ -80,8 +67,10 @@ void loop() {
     currentModus = MANUAL;
   } else if(b == UP) {
     ++stufe;
+    if(stufe >= 4) stufe = 4;
   } else if(b == DOWN) {
     --stufe;
+    if(stufe > 4) stufe = 0;
   } else if(b == RIGHT) {
     ++pos;
     if(pos >= 36) pos = 36;
@@ -99,11 +88,11 @@ void loop() {
     ledStrip.Level(stufe, 0);
     Messager.sender.send(currentModus, stufe, pos);
   }
-  
+  /*
   Serial.print(currentModus);
   Serial.print(";");
   Serial.print(stufe);
   Serial.print(";");
   Serial.print(pos);
-  Serial.println(";");
+  Serial.println(";");*/
 }

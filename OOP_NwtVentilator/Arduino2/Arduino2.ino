@@ -5,6 +5,7 @@
 #define MICROSTEPS 16
 #define RPM 20
 
+//Pins
 #define DIR 8
 #define STEP 7
 #define SLEEP 6
@@ -12,12 +13,13 @@
 #define MS2 4
 #define MS3 3
 
-#define STOPP 2  //Pin 21 hat die höchste Interrupt-Priorität auf dem Arduino-Mega
+#define STOPP 2  //2 ist Interruptfähig
 
 LowerStepper stepper(RPM, DIR, STEP, SLEEP, MS1, MS2, MS3, STOPP);
 
 #include "UpperStepper.h"
 
+//Pins
 #define upper_DIR 27
 #define upper_STEP 26
 #define upper_SLEEP 25
@@ -27,6 +29,8 @@ LowerStepper stepper(RPM, DIR, STEP, SLEEP, MS1, MS2, MS3, STOPP);
 
 UpperStepper stepper2(RPM, upper_DIR, upper_STEP, upper_SLEEP, upper_MS1, upper_MS2, upper_MS3);
 int position = 0;
+
+
 #include "GSM.h"
 //GSM gsm(12, 11, 10, 9, 8);
 
@@ -37,26 +41,23 @@ struct Sensor {
 };
 
 Sensor sensoren[6] = {{43, 42}, {45, 44}, {47, 46}, {48, 49}, {50, 51}, {41,40}};
-int winkel = 0;
-const int MAX_DISTANZ = 80; //[in cm]
-int grad[12] = {0, 60, 120, 180, 240, 300, 30, 90, 150, 210, 270, 330};
 
 void setup() {
   Serial.begin(9600);
   Serial2.begin(9600);
 
-  Serial.println("Hallo");
   pinMode(STOPP, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(STOPP), LowerStepper::stopInterrupt, FALLING);
 
   
-    for (int i = 0; i < 6; i++) {
-      pinMode(sensoren[i].trig, OUTPUT);
-      pinMode(sensoren[i].echo, INPUT);
-    }
+  for(int i = 0; i < 6; i++) {
+    pinMode(sensoren[i].trig, OUTPUT);
+    pinMode(sensoren[i].echo, INPUT);
+  }
   
   stepper2.begin();
   stepper2.test();
+  
   stepper.begin();
 }
 
@@ -73,6 +74,7 @@ uint8_t manual_pos = 0;
 
 void loop() {
   Messager.receiver.read(tempModus, stufe, manual_pos);
+
   if(manual_pos > 36) manual_pos = 0;
 
   if (tempModus != lastModus && tempModus != -1) {
@@ -99,8 +101,6 @@ void loop() {
     stufe = 1;
   }
 
-  delay(250);
-
   if(on) {
     const int SENSOREN = 6;
     long messrunde1[SENSOREN];
@@ -117,7 +117,7 @@ void loop() {
       delay(50);
     }
 
-    // Drehen auf +120°
+    // Drehen auf +30°
     stepper.move(-120);
     delay(100);
 
@@ -151,7 +151,7 @@ void loop() {
 
     for (int i = 0; i < SENSOREN; i++) {
       int diff1 = abs(messrunde1[i] - messrunde3[i]);  // zurück zur Startposition
-      int diff2 = abs(messrunde1[i] - messrunde4[i]);  // vor und nochmal messen
+      int diff2 = abs(messrunde2[i] - messrunde4[i]);  // vor und nochmal messen
 
       int maxCurrent = max(diff1, diff2);
 
@@ -161,8 +161,6 @@ void loop() {
         richtungGrad2 = (diff2 > diff1);  // entscheidet später, welchen Winkel wir nehmen
       }
     }
-
-
 
     if (zielSensor != -1) {
       Serial.print("Bewegung erkannt bei Sensor ");
@@ -182,7 +180,6 @@ void loop() {
   } else if(off == true) {
 
   } else if(manuel == true) {
-    Serial.println("Manuel");
     movestepper((manual_pos*10));
   }
 }
@@ -192,15 +189,15 @@ void movestepper(int ziel) {
   int delta = ziel - position;
 
   // Kürzesten Weg wählen (optional, falls z. B. -270° besser als +90° wäre)
-  if (delta > 180) delta -= 360;
-  if (delta < -180) delta += 360;
+  //if (delta > 180) delta -= 360;
+  //if (delta < -180) delta += 360;
 
   // Schrittmotor ansteuern
-  stepper2.getStepper().enable();
+  stepper2.getStepper().enable(); 
   stepper2.getStepper().rotate(delta * -1);  // oder z. B. moveDegrees(delta); falls du so eine Methode hast
 
   // Position aktualisieren (Modulo 360, falls du willst)
-  position = (position + delta) % 360;
+  position = (position + delta);
   if (position < 0) position += 360;  // Immer positiv halten
 }
 
