@@ -1,7 +1,6 @@
-#pragma once
 #include "HardwareSerial.h"
 #include <stdint.h>
-enum Modus {OFF = 0, ON = 1, MANUAL = 2, NONE = 3};
+enum Modus {OFF = 0, ON = 1, MANUAL = 2};
 
 class Sender {
   private:
@@ -12,9 +11,10 @@ class Sender {
       serialPort.begin(baud);
     }
   
-  void send(Modus m, uint8_t speed) {
+  void send(Modus m, uint8_t speed, uint8_t pos) {
     this->serialPort.write((uint8_t)m);
     this->serialPort.write(speed);
+    this->serialPort.write(pos);
   }
 };
 
@@ -28,12 +28,15 @@ class Receiver {
     }
   
   bool available() {
-    return serialPort.available() >=2;
+    return serialPort.available() >=3;
   }
 
-  void read(Modus &outMode, uint8_t &outSpeed) {
-    outMode  = static_cast<Modus>(serialPort.read());
-    outSpeed = serialPort.read();
+  void read(Modus &outMode, uint8_t &outSpeed, uint8_t &outpos) {
+    if(serialPort.available() >= 3) {
+      outMode  = static_cast<Modus>(serialPort.read());
+      outSpeed = serialPort.read();
+      outpos = serialPort.read();
+    }
   }
 };
 
@@ -46,6 +49,5 @@ struct MessagerClass {
     , receiver(Serial2, 9600)
   {}
 };
-
 
 MessagerClass Messager;

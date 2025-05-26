@@ -34,15 +34,6 @@ DcMotor gsm(in1, in2, in3, in4, speed);
 //***************Ultraschallsensoren*******************//
 //TODO
 
-//***************TFT-Display*******************//
-#include "UserInterface.h"
-#define TFT_CS    25
-#define TFT_RST   23
-#define TFT_DC    27
-#define TFT_MOSI  29
-#define TFT_SCLK  31
-UserInterface display(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
-
 //******************Andere*******************//
 #include "Messager.h"
 Modus currentModus;
@@ -50,20 +41,31 @@ Modus lastModus;
 
 void setup() {
   Serial.begin(9600);
+  Serial2.begin(9600);
   ampelDisplay.begin();
   remote.start();
   
   ledStrip.begin();
-  display.begin();
+  //display.begin();
 
 }
 
-int stufe = 0;
+uint8_t stufe = 0;
 int lastStufe;
+uint8_t pos = 0;
 
 void loop() {
   
   Button b = remote.awaitInput(250);
+
+  //if(b == A) Serial.println("A");
+  //if(b == B) Serial.println("B");
+  //if(b == C) Serial.println("C");
+  //if(b == NONE) Serial.println("NONE");
+  //if(b == UP) Serial.println("UP");
+  //if(b == DOWN) Serial.println("DOWN");
+  //if(b == LEFT) Serial.println("LEFT");
+  //if(b == RIGHT) Serial.println("RIGHT");
 
   if(b == A) {
     ampelDisplay.Automatic();
@@ -80,6 +82,14 @@ void loop() {
     ++stufe;
   } else if(b == DOWN) {
     --stufe;
+  } else if(b == RIGHT) {
+    ++pos;
+    if(pos >= 36) pos = 36;
+    Messager.sender.send(currentModus, stufe, pos);
+  } else if(b == LEFT) {
+    --pos;
+    if(pos  > 36) pos = 0;
+    Messager.sender.send(currentModus, stufe, pos);
   }
 
   //
@@ -87,8 +97,13 @@ void loop() {
     lastStufe  = stufe;
     lastModus  = currentModus;
     ledStrip.Level(stufe, 0);
-    //Messager.sender.send(currentModus, stufe);
+    Messager.sender.send(currentModus, stufe, pos);
   }
   
-  display.updateDynamicUserInterface(1000, stufe);
+  Serial.print(currentModus);
+  Serial.print(";");
+  Serial.print(stufe);
+  Serial.print(";");
+  Serial.print(pos);
+  Serial.println(";");
 }

@@ -37,8 +37,6 @@ struct Sensor {
 };
 
 Sensor sensoren[6] = {{43, 42}, {45, 44}, {47, 46}, {48, 49}, {50, 51}, {41,40}};
-long messwerte[12];
-long _messwerte[12];
 int winkel = 0;
 const int MAX_DISTANZ = 80; //[in cm]
 int grad[12] = {0, 60, 120, 180, 240, 300, 30, 90, 150, 210, 270, 330};
@@ -46,6 +44,7 @@ int grad[12] = {0, 60, 120, 180, 240, 300, 30, 90, 150, 210, 270, 330};
 void setup() {
   Serial.begin(9600);
   Serial2.begin(9600);
+
   Serial.println("Hallo");
   pinMode(STOPP, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(STOPP), LowerStepper::stopInterrupt, FALLING);
@@ -62,7 +61,7 @@ void setup() {
 }
 
 #include "Messager.h"
-Modus m = NONE;
+Modus m = OFF;
 Modus lastModus;
 Modus tempModus;
 bool on = false;
@@ -70,9 +69,12 @@ bool off = true;
 bool manuel;
 
 uint8_t stufe = 0;
+uint8_t manual_pos = 0;
 
 void loop() {
-  Messager.receiver.read(tempModus, stufe);
+  Messager.receiver.read(tempModus, stufe, manual_pos);
+  if(manual_pos > 36) manual_pos = 0;
+
   if (tempModus != lastModus && tempModus != -1) {
     lastModus = tempModus;
     m = lastModus;
@@ -99,11 +101,15 @@ void loop() {
 
   delay(250);
 
-  if (true) {
+  if(on) {
     const int SENSOREN = 6;
     long messrunde1[SENSOREN];
     long messrunde2[SENSOREN];
+    long messrunde3[SENSOREN];
+    long messrunde4[SENSOREN];
+
     int grad[6] = {0, 60, 120, 180, 240, 300};
+    int grad2[6] = {30, 90, 150, 210, 270, 330};
 
     // Messung in Startposition (0°)
     for (int i = 0; i < SENSOREN; i++) {
@@ -112,7 +118,7 @@ void loop() {
     }
 
     // Drehen auf +120°
-    //stepper.move(120);
+    stepper.move(-120);
     delay(100);
 
     // Zweite Messung
@@ -122,46 +128,62 @@ void loop() {
     }
 
     // Zurückdrehen auf Ausgangsposition
-    //stepper.move(-120);
+    stepper.move(120);
+    for (int i = 0; i < SENSOREN; i++) {
+      messrunde3[i] = messung(sensoren[i].trig, sensoren[i].echo);
+      delay(50);
+    }
+
+    stepper.move(-120);
+    for (int i = 0; i < SENSOREN; i++) {
+      messrunde4[i] = messung(sensoren[i].trig, sensoren[i].echo);
+      delay(50);
+    }
+
+    stepper.move(120);
+
     delay(100);
 
     // Veränderung analysieren
     int maxDiff = 5;
     int zielSensor = -1;
+    bool richtungGrad2 = false;
 
     for (int i = 0; i < SENSOREN; i++) {
-      int diff = abs(messrunde1[i] - messrunde2[i]);
-      Serial.print("Sensor ");
-      Serial.print(i);
-      Serial.print(" (");
-      Serial.print(grad[i]);
-      Serial.print("°): ");
-      Serial.print(messrunde1[i]);
-      Serial.print(" cm -> ");
-      Serial.print(messrunde2[i]);
-      Serial.print(" cm => Diff: ");
-      Serial.println(diff);
+      int diff1 = abs(messrunde1[i] - messrunde3[i]);  // zurück zur Startposition
+      int diff2 = abs(messrunde1[i] - messrunde4[i]);  // vor und nochmal messen
 
-      if (diff > maxDiff && messrunde2[i] > 0 && messrunde1[i] > 0) {
-        maxDiff = diff;
+      int maxCurrent = max(diff1, diff2);
+
+      if (maxCurrent > maxDiff && messrunde1[i] > 0 && messrunde2[i] > 0) {
+        maxDiff = maxCurrent;
         zielSensor = i;
+        richtungGrad2 = (diff2 > diff1);  // entscheidet später, welchen Winkel wir nehmen
       }
     }
+
+
 
     if (zielSensor != -1) {
       Serial.print("Bewegung erkannt bei Sensor ");
       Serial.print(zielSensor);
       Serial.print(" — Richtung: ");
-      Serial.print(grad[zielSensor]);
+
+      int zielWinkel = richtungGrad2 ? grad2[zielSensor] : grad[zielSensor];
+      Serial.print(zielWinkel);
       Serial.println("°");
-      movestepper(grad[zielSensor]);
+
+      movestepper(zielWinkel);
     } else {
       Serial.println("Keine signifikante Bewegung erkannt.");
     }
 
-    Serial.print("Motor = ");
-    Serial.println(position);
 
+  } else if(off == true) {
+
+  } else if(manuel == true) {
+    Serial.println("Manuel");
+    movestepper((manual_pos*10));
   }
 }
 

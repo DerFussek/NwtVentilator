@@ -12,9 +12,10 @@ class Sender {
       serialPort.begin(baud);
     }
   
-  void send(Modus m, uint8_t speed) {
+  void send(Modus m, uint8_t speed, uint8_t pos) {
     this->serialPort.write((uint8_t)m);
     this->serialPort.write(speed);
+    this->serialPort.write(pos);
   }
 };
 
@@ -31,10 +32,11 @@ class Receiver {
     return serialPort.available() >=2;
   }
 
-  void read(Modus &outMode, uint8_t &outSpeed) {
+  void read(Modus &outMode, uint8_t &outSpeed, uint8_t &outpos) {
     if(Serial.available() > 0) {
       outMode  = static_cast<Modus>(serialPort.read());
       outSpeed = serialPort.read();
+      outpos = serialPort.read();
     }
   }
 };
