@@ -31,7 +31,7 @@ UpperStepper stepper2(RPM, upper_DIR, upper_STEP, upper_SLEEP, upper_MS1, upper_
 int position = 0;
 
 
-#include "GSM.h"
+//#include "GSM.h"
 //GSM gsm(12, 11, 10, 9, 8);
 
 //=========US-Sensoren=========//
@@ -41,6 +41,8 @@ struct Sensor {
 };
 
 Sensor sensoren[6] = {{43, 42}, {45, 44}, {47, 46}, {48, 49}, {50, 51}, {41,40}};
+
+
 
 void setup() {
   Serial.begin(9600);
@@ -72,6 +74,11 @@ bool manuel;
 uint8_t stufe = 0;
 uint8_t manual_pos = 0;
 
+
+bool eichung = false;
+const int SENSOREN = 6;
+long filterRaum_0[SENSOREN];
+long filterRaum_30[SENSOREN];
 void loop() {
   Messager.receiver.read(tempModus, stufe, manual_pos);
 
@@ -101,87 +108,146 @@ void loop() {
     stufe = 1;
   }
 
-  if(on) {
-    const int SENSOREN = 6;
-    long messrunde1[SENSOREN];
-    long messrunde2[SENSOREN];
-    long messrunde3[SENSOREN];
-    long messrunde4[SENSOREN];
+  
+  if(true) {
+      const int SENSOREN = 6;
+      const int MAX_Abstand = 200; //in cm
 
-    int grad[6] = {0, 60, 120, 180, 240, 300};
-    int grad2[6] = {30, 90, 150, 210, 270, 330};
+      if(eichung == false) {  
+        Serial.println("Eichung starten in");
+        for(int i=5; i > 0; i--) {
+          Serial.print(i+1);
+          Serial.println("s");
+        }
+        Serial.println("Eichung startet");
 
-    // Messung in Startposition (0°)
-    for (int i = 0; i < SENSOREN; i++) {
-      messrunde1[i] = messung(sensoren[i].trig, sensoren[i].echo);
-      delay(50);
-    }
 
-    // Drehen auf +30°
-    stepper.move(-120);
-    delay(100);
+        delay(1000);
+        long Raum_0[3][SENSOREN];
+        long Raum_30[3][SENSOREN];
 
-    // Zweite Messung
-    for (int i = 0; i < SENSOREN; i++) {
-      messrunde2[i] = messung(sensoren[i].trig, sensoren[i].echo);
-      delay(50);
-    }
+        for(int n = 0; n < 3; n++) {
+          
+          // Messung in Startposition (0°)
+          for (int i = 0; i < SENSOREN; i++) {
+            long var = 0;
+            var = messung(sensoren[i].trig, sensoren[i].echo);
+            
+            if(var >= 150) Raum_0[n][i] = 150;
+            else Raum_0[n][i] = var;
+            delay(50);
 
-    // Zurückdrehen auf Ausgangsposition
-    stepper.move(120);
-    for (int i = 0; i < SENSOREN; i++) {
-      messrunde3[i] = messung(sensoren[i].trig, sensoren[i].echo);
-      delay(50);
-    }
+          }
 
-    stepper.move(-120);
-    for (int i = 0; i < SENSOREN; i++) {
-      messrunde4[i] = messung(sensoren[i].trig, sensoren[i].echo);
-      delay(50);
-    }
+          stepper.move(-120);
+          for (int i = 0; i < SENSOREN; i++) {
+            long var = 0;
+            var = messung(sensoren[i].trig, sensoren[i].echo);
+            
+            if(var >= 150) Raum_30[n][i] = 150;
+            else Raum_30[n][i] = var;
+          }
 
-    stepper.move(120);
+          stepper.move(120);
+        }
 
-    delay(100);
+        
 
-    // Veränderung analysieren
-    int maxDiff = 5;
-    int zielSensor = -1;
-    bool richtungGrad2 = false;
+        for(int i = 0; i < SENSOREN; i++) {
+          filterRaum_0[i] = mittlererWert(Raum_0[0][i], Raum_0[1][i], Raum_0[2][i]);
+          filterRaum_30[i] = mittlererWert(Raum_30[0][i], Raum_30[1][i], Raum_30[2][i]);
+        }
 
-    for (int i = 0; i < SENSOREN; i++) {
-      int diff1 = abs(messrunde1[i] - messrunde3[i]);  // zurück zur Startposition
-      int diff2 = abs(messrunde2[i] - messrunde4[i]);  // vor und nochmal messen
+        eichung = true;
+        Serial.println("Eichung abgeschlossen!!!");
 
-      int maxCurrent = max(diff1, diff2);
+        for(int i=0; i<6; i++) {
+          Serial.print("Sensor [" + (String)i + "] = ");
+          Serial.print(filterRaum_0[i]);
+          Serial.print(" , ");
+          Serial.println(filterRaum_30[i]);
+        }
 
-      if (maxCurrent > maxDiff && messrunde1[i] > 0 && messrunde2[i] > 0) {
-        maxDiff = maxCurrent;
-        zielSensor = i;
-        richtungGrad2 = (diff2 > diff1);  // entscheidet später, welchen Winkel wir nehmen
+
+        delay(2000);
       }
-    }
 
-    if (zielSensor != -1) {
-      Serial.print("Bewegung erkannt bei Sensor ");
-      Serial.print(zielSensor);
-      Serial.print(" — Richtung: ");
+      //NACH EICHUNG
 
-      int zielWinkel = richtungGrad2 ? grad2[zielSensor] : grad[zielSensor];
-      Serial.print(zielWinkel);
-      Serial.println("°");
+      long messrunde_0[SENSOREN];
+      long messrunde_30[SENSOREN];
 
-      movestepper(zielWinkel);
-    } else {
-      Serial.println("Keine signifikante Bewegung erkannt.");
-    }
+      int grad[6] = {0, 60, 120, 180, 240, 300};
+      int grad2[6] = {30, 90, 150, 210, 270, 330};
 
+      for (int i = 0; i < SENSOREN; i++) {
+        long var = 0;
+        var = messung(sensoren[i].trig, sensoren[i].echo);
+        
+        if(var >= 150) messrunde_0[i] = 150;
+        else messrunde_0[i] = var;
+        delay(50);
+      }
 
-  } else if(off == true) {
+      stepper.move(-120);
+      for (int i = 0; i < SENSOREN; i++) {
+        long var = 0;
+        var = messung(sensoren[i].trig, sensoren[i].echo);
+        
+        if(var >= 150) messrunde_30[i] = 150;
+        else messrunde_30[i] = var;
+        delay(50);
+      }
 
-  } else if(manuel == true) {
-    movestepper((manual_pos*10));
-  }
+      stepper.move(120);
+
+      const int HYSTERESE = 20; //in cm
+      int ZielSensor = -1;
+      bool versetzt = false;
+      for(int i = 0; i < SENSOREN; i++) {
+        int delta_0 = abs(filterRaum_0[i]- messrunde_0[i]);
+        int delta_30 = abs(filterRaum_0[i]- messrunde_0[i]);
+
+        int maxDelta = max(delta_0, delta_30);
+
+        delta_0 > delta_30 ? versetzt = false: versetzt = true;
+        if(maxDelta >= HYSTERESE) {
+          ZielSensor = i;
+        }
+      }
+      
+      Serial.println("Bei 0°: ");
+      for(int i = 0; i<6; i++) {
+          Serial.print("Sensor" + (String)i + " =");
+          Serial.print(filterRaum_0[i]);
+          Serial.print(" -> ");
+          Serial.print(messrunde_0[i]);
+          Serial.print(" => ");
+          Serial.println(abs(filterRaum_0[i] - messrunde_0[i]));
+      }
+
+      Serial.println("=========================================");
+      Serial.println("Bei 30°: ");
+      for(int i = 0; i<6; i++) {
+          Serial.print("Sensor" + (String)i + " =");
+          Serial.print(filterRaum_30[i]);
+          Serial.print(" -> ");
+          Serial.print(messrunde_30[i]);
+          Serial.print(" => ");
+          Serial.println(abs(filterRaum_30[i] - messrunde_30[i]));
+      }
+
+      Serial.println("=========================================");  
+
+      if(versetzt) movestepper(grad2[ZielSensor]);
+      else if(!versetzt) movestepper(grad[ZielSensor]);
+
+    } else if(off == true) {
+
+    } else if(2 == 1) {
+      movestepper((manual_pos*10));
+    }   //TEST
+    
 }
 
 
@@ -189,8 +255,8 @@ void movestepper(int ziel) {
   int delta = ziel - position;
 
   // Kürzesten Weg wählen (optional, falls z. B. -270° besser als +90° wäre)
-  //if (delta > 180) delta -= 360;
-  //if (delta < -180) delta += 360;
+  if (delta > 180) delta -= 360;
+  if (delta < -180) delta += 360;
 
   // Schrittmotor ansteuern
   stepper2.getStepper().enable(); 
@@ -200,6 +266,14 @@ void movestepper(int ziel) {
   position = (position + delta);
   if (position < 0) position += 360;  // Immer positiv halten
 }
+
+
+
+long gefilterteMessung(uint8_t trig, uint8_t echo) {
+  long d = messung(trig, echo);
+  return d;
+}
+
 
 long messung(uint8_t trigPin, uint8_t echoPin) {
   digitalWrite(trigPin, LOW);
@@ -212,9 +286,19 @@ long messung(uint8_t trigPin, uint8_t echoPin) {
   return entfernung;
 }
 
-long gefilterteMessung(uint8_t trig, uint8_t echo) {
-  long d = messung(trig, echo);
-  return d;
+long mittlererWert(long a, long b, long c) {
+  // Prüfe, ob a der mittlere Wert ist
+  if ((a >= b && a <= c) || (a <= b && a >= c)) {
+    return a;
+  }
+  // Prüfe, ob b der mittlere Wert ist
+  else if ((b >= a && b <= c) || (b <= a && b >= c)) {
+    return b;
+  }
+  // Wenn a und b nicht mittig sind, muss es c sein
+  else {
+    return c;
+  }
 }
 
 
