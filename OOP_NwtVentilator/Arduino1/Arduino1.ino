@@ -1,9 +1,9 @@
 
 //*****************Ampelanzeige**********************//
 #include "AmpelDisplay.h"
-const int ampelRedPin = 11;
-const int ampelYellowPin = 10;
-const int ampelGreenPin = 9;
+const int ampelRedPin = 45;
+const int ampelYellowPin = 41;
+const int ampelGreenPin = 43;
 
 AmpelDisplay ampelDisplay(ampelRedPin, ampelYellowPin, ampelGreenPin);
 
@@ -30,9 +30,12 @@ Modus lastModus;
 void setup() {
   Serial.begin(9600);
   Serial2.begin(9600);
+
   ampelDisplay.begin();
   remote.start();
+  
   ampelDisplay.Off();
+  
   ledStrip.begin();
   ledStrip.Level(2, 0);
 
@@ -43,7 +46,6 @@ int lastStufe;
 uint8_t pos = 0;
 
 void loop() {
-  
   Button b = remote.awaitInput(250);
 
   //if(b == A) Serial.println("A");
@@ -75,21 +77,21 @@ void loop() {
   } else if(b == RIGHT) {
     ++pos;
     if(pos >= 36) pos = 36;
-    Messager.sender.send(currentModus, stufe, pos);
+    Messager.send(currentModus, stufe, pos);
   } else if(b == LEFT) {
     --pos;
     if(pos  > 36) pos = 0;
-    Messager.sender.send(currentModus, stufe, pos);
+    Messager.send(currentModus, stufe, pos);
   }
-
+  
   //
   if(stufe != lastStufe || currentModus != lastModus) {
     lastStufe  = stufe;
     lastModus  = currentModus;
-    ledStrip.Level(stufe, 0);
-    Messager.sender.send(currentModus, stufe, pos);
+    
+    Messager.send(currentModus, stufe, pos);
   }
-
+  ledStrip.Level(stufe, 250);
   Serial.print(currentModus);
   Serial.print(";");
   Serial.print(stufe);

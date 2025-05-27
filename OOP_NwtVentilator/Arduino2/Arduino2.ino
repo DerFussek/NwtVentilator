@@ -28,7 +28,7 @@ LowerStepper stepper(RPM, DIR, STEP, SLEEP, MS1, MS2, MS3, STOPP);
 #define upper_MS1 22
 
 UpperStepper stepper2(RPM, upper_DIR, upper_STEP, upper_SLEEP, upper_MS1, upper_MS2, upper_MS3);
-int position = 0;
+
 
 //#define DEV
 
@@ -83,6 +83,7 @@ bool kalibiert = false;
 long r0[6], r30[6];
 
 void loop() {
+  /*
   while(true) {
     if(Serial.available() > 0) {
       String input = Serial.readStringUntil("\n");
@@ -94,16 +95,16 @@ void loop() {
       } else {
         int deg = input.toInt();
         Serial.println(deg);
-        movestepper(deg);
+        stepper2.movestepper(deg);
       }
       
     }
     
     gsm.setSpeed(64);
   }
-  
+  */
   if(kalibiert == false) {
-    kalibiere(3); // Messanzahl übergeben
+    kalibiere(7); // Messanzahl übergeben
     kalibiert = true;
   } 
   getCurrentData();
@@ -124,7 +125,10 @@ void loop() {
     stepper.getStepper().disable();
     stepper2.getStepper().disable();
   } else if(m == MANUAL) {
-
+    gsm.enable();
+    int speed = map(stufe, 0, 4, 0, 255);
+    gsm.setSpeed(speed);
+    stepper2.movestepper(m_pos*10);
   }
 }
 
@@ -137,11 +141,11 @@ void getCurrentData() {
   static uint8_t l_stufe = 0;
   static uint8_t l_pos = 0;
 
-  if(!Messager.receiver.available()) {
+  if(!Messager.available()) {
     delay(100);
     return;                   // kein neues Paket -> Funktion beenden
   }
-  Messager.receiver.read(t_m, t_stufe, t_pos);
+  Messager.read(t_m, t_stufe, t_pos);
 
 
   if(t_stufe > 4)   t_stufe = 4;

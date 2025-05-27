@@ -2,6 +2,7 @@
 #include "Nema17.h"
 
 class UpperStepper : public Nema17 {
+  int position = 0;
   public:
     UpperStepper(int rpm, int dir, int step, int sleep, int ms1, int ms2, int ms3)
       : Nema17(rpm, dir, step, sleep, ms1, ms2, ms3, -1) {
@@ -28,6 +29,26 @@ class UpperStepper : public Nema17 {
       motor.rotate(90);
       motor.disable();
       delay(2500);
+    }
+
+    void movestepper(int ziel) {
+      int delta = ziel - position;
+
+      // Schrittmotor ansteuern
+      motor.enable();
+      motor.rotate(delta * -1);  // oder z. B. moveDegrees(delta); falls du so eine Methode hast
+
+      // Position aktualisieren (Modulo 360, falls du willst)
+      position = (position + delta);  
+    }
+
+        //Getter / Setter
+    int getPosition() {
+      return this->position;
+    }
+
+    void setPosition(int pos) {
+      this->position = pos;
     }
 
     public:

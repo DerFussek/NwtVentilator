@@ -22,7 +22,6 @@ class Nema17 {
   protected:  
 
     A4988 motor;  //Motorobjekt
-    short int position;
 
   public:
     Nema17(int RPM, const int dir, const int step, const int sleep, const int ms1, const int ms2, const int ms3, const int stop) 
@@ -44,13 +43,5 @@ class Nema17 {
     }
 
     //TODO
-    
-    //Getter / Setter
-    int getPosition() {
-      return this->position;
-    }
-
-    void setPosition(int pos) {
-      this->position = pos;
-    }
+  
 };
