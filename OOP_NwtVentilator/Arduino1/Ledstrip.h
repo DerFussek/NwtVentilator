@@ -32,7 +32,7 @@ class Ledstrip {
       this->strip.clear();
       int ledPerStage = this->numberLeds / this->numberOfLevels;
 
-      for(int i = 0; i < level * ledPerStage; i++) {
+      for(int i = numberLeds; i >=  numberLeds - level * ledPerStage; i--) {
         this->strip.setPixelColor(i, strip.Color(stripColor[0], stripColor[1], stripColor[2]));
       }
 

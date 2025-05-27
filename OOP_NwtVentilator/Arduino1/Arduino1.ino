@@ -1,9 +1,9 @@
 
 //*****************Ampelanzeige**********************//
 #include "AmpelDisplay.h"
-const int ampelRedPin = 9;
+const int ampelRedPin = 11;
 const int ampelYellowPin = 10;
-const int ampelGreenPin = 11;
+const int ampelGreenPin = 9;
 
 AmpelDisplay ampelDisplay(ampelRedPin, ampelYellowPin, ampelGreenPin);
 
@@ -32,8 +32,9 @@ void setup() {
   Serial2.begin(9600);
   ampelDisplay.begin();
   remote.start();
-  
+  ampelDisplay.Off();
   ledStrip.begin();
+  ledStrip.Level(2, 0);
 
 }
 
@@ -88,11 +89,11 @@ void loop() {
     ledStrip.Level(stufe, 0);
     Messager.sender.send(currentModus, stufe, pos);
   }
-  /*
+
   Serial.print(currentModus);
   Serial.print(";");
   Serial.print(stufe);
   Serial.print(";");
   Serial.print(pos);
-  Serial.println(";");*/
+  Serial.println(";");
 }

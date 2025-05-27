@@ -19,7 +19,7 @@ class UpperStepper : public Nema17 {
     void test() {
       delay(2500);
       motor.setRPM(25);
-      motor.setSpeedProfile(motor.LINEAR_SPEED);
+      motor.setSpeedProfile(motor.LINEAR_SPEED, 1000, 1000);
       motor.enable();
       motor.rotate(-90);
       

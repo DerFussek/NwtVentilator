@@ -23,10 +23,10 @@ class Remote {
 
       if (!remote.decode()) return NONE; 
 
-     /*/ if (remote.decodedIRData.flags & IRDATA_FLAGS_IS_REPEAT) {
+      if (remote.decodedIRData.flags & IRDATA_FLAGS_IS_REPEAT) {
           remote.resume();
           return NONE;
-      }*/
+      }
       
       if (millis() - pressDelay < pressDelayMs) return NONE;
 
