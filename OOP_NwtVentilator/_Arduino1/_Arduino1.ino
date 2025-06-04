@@ -290,12 +290,12 @@ void drawStaticUserInterface() {
 
 void updateDynamicUserInterface(int delayMs, int level) {
   static String lastTime = "";
-  static byte lastTemp = "";
+  static byte lastTemp = 0;
   static int32_t lastDelay = millis();
   static int lastLevel = level;
   const int16_t circleR = 20;
 
-  if(!(millis() - lastDelay) >= delayMs) return;
+  if(!(millis() - lastDelay >= delayMs)) return;
 
   byte hour = myRTC.getHour(h12, PM);   //Aktuelle Stunde abfragen
   byte minute = myRTC.getMinute();  //Aktuelle Minute abfragen
