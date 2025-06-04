@@ -3,10 +3,10 @@
 
 class Ledstrip {
   private:
-    short int pin;
-    short int numberLeds;
+    short int pin;  //Pin an dem der Ledstrip angeschlossen ist
+    short int numberLeds; //Anzahl an LEDS auf dem Strip
     
-    Adafruit_NeoPixel strip;
+    Adafruit_NeoPixel strip; //objekt der Klasse Adafruit_NeoPixel einbinden
 
     byte numberOfLevels;
     byte stripColor[3] = {16, 16, 16};
