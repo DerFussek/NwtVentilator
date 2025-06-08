@@ -1,9 +1,9 @@
-#include "Arduino.h"
-#include "A4988.h"
-#include "LowerStepper.h"
-#define MOTOR_STEPS 200
-#define MICROSTEPS 16
-#define RPM 20
+#include "Arduino.h"                      // Grundlegende Arduino-API
+#include "A4988.h"                        // Treiberbibliothek
+#include "LowerStepper.h"                 // eigener Schrittmotor unten
+#define MOTOR_STEPS 200                    // Schritte pro Umdrehung
+#define MICROSTEPS 16                      // Microstep-Auflösung
+#define RPM 20                             // Grundgeschwindigkeit
 
 //Pins
 #define DIR 8
@@ -15,9 +15,9 @@
 
 #define STOPP 2  //2 ist Interruptfähig
 
-LowerStepper stepper(RPM, DIR, STEP, SLEEP, MS1, MS2, MS3, STOPP);
+LowerStepper stepper(RPM, DIR, STEP, SLEEP, MS1, MS2, MS3, STOPP); // Objekt erzeugen
 
-#include "UpperStepper.h"
+#include "UpperStepper.h"                  // oberer Schrittmotor
 
 //Pins
 #define upper_DIR 27
@@ -30,40 +30,42 @@ LowerStepper stepper(RPM, DIR, STEP, SLEEP, MS1, MS2, MS3, STOPP);
 UpperStepper stepper2(RPM, upper_DIR, upper_STEP, upper_SLEEP, upper_MS1, upper_MS2, upper_MS3);
 
 
-//#define DEV
+#//define DEV
 
-#include "DcMotor.h"
-DcMotor gsm(10, 11, 12, 13, 9);
+#include "DcMotor.h"                       // Gleichstrommotor für Gebläse
+DcMotor gsm(10, 11, 12, 13, 9);            // Pins übergeben
 
 //=========US-Sensoren=========//
-struct Sensor {
-  uint8_t trig;
-  uint8_t echo;
+struct Sensor {                            // Pins eines Ultraschallsensors
+  uint8_t trig;                           // Trigger-Pin
+  uint8_t echo;                           // Echo-Pin
 };
 
-Sensor sensoren[6] = {{43, 42}, {45, 44}, {47, 46}, {48, 49}, {50, 51}, {41,40}};
+Sensor sensoren[6] = {                     // sechs Sensoren
+  {43, 42}, {45, 44}, {47, 46}, {48, 49}, {50, 51}, {41,40}
+};
 
 
 
 void setup() {
-  Serial.begin(9600);
-  Serial2.begin(9600);
+  Serial.begin(9600);                      // Serielle Ausgaben
+  Serial2.begin(9600);                     // Verbindung zum Master
 
-  pinMode(STOPP, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(STOPP), LowerStepper::stopInterrupt, FALLING);
+  pinMode(STOPP, INPUT_PULLUP);            // Endschalter
+  attachInterrupt(digitalPinToInterrupt(STOPP), LowerStepper::stopInterrupt, FALLING); // Interrupt bei Betätigung
 
   
-  for(int i = 0; i < 6; i++) {
+  for(int i = 0; i < 6; i++) {              // Sensorpins konfigurieren
     pinMode(sensoren[i].trig, OUTPUT);
     pinMode(sensoren[i].echo, INPUT);
   }
   
-  stepper2.begin();
-  stepper2.test();
+  stepper2.begin();                         // oberen Stepper initialisieren
+  stepper2.test();                          // kurze Funktionsprüfung
   
-  stepper.begin();
-  gsm.begin();
-  gsm.disable();
+  stepper.begin();                          // unteren Stepper initialisieren
+  gsm.begin();                              // Gleichstrommotor initialisieren
+  gsm.disable();                           // vorerst ausschalten
 }
 
 #include "Messager.h"
@@ -103,10 +105,10 @@ void loop() {
     gsm.setSpeed(64);
   }
   */
-  if(kalibiert == false) {
+  if(kalibiert == false) {                // Einmalige Kalibrierung
     kalibiere(7); // Messanzahl übergeben
     kalibiert = true;
-  } 
+  }
   getCurrentData();
 
 
@@ -141,7 +143,7 @@ void getCurrentData() {
   static uint8_t l_stufe = 0;
   static uint8_t l_pos = 0;
 
-  if(!Messager.available()) {
+  if(!Messager.available()) {             // warten bis drei Bytes da sind
     delay(100);
     return;                   // kein neues Paket -> Funktion beenden
   }
@@ -172,14 +174,15 @@ void getCurrentData() {
 }
 
 
+// einfache Entfernungsmessung mit Ultraschallsensor
 long messung(uint8_t trigPin, uint8_t echoPin, const int MAX_ENTFERNUNG) {
-  digitalWrite(trigPin, LOW);
+  digitalWrite(trigPin, LOW);              // Impuls vorbereiten
   delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
+  digitalWrite(trigPin, HIGH);             // Trigger senden
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
-  long dauer = pulseIn(echoPin, HIGH);
-  long entfernung = dauer/ 2 * 0.03432;
+  long dauer = pulseIn(echoPin, HIGH);     // Echo-Zeit messen
+  long entfernung = dauer/ 2 * 0.03432;    // Entfernung berechnen
   if(entfernung >= MAX_ENTFERNUNG) return MAX_ENTFERNUNG;
   delay(50);
   return entfernung;
