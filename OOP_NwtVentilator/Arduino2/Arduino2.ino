@@ -10,27 +10,27 @@
 #define MICROSTEPS 16                      // Microstep-Auflösung
 #define RPM 20                             // Grundgeschwindigkeit
 
-//Pins
-#define DIR 8
-#define STEP 7
-#define SLEEP 6
-#define MS1 5
-#define MS2 4
-#define MS3 3
+// Pins für den unteren Schrittmotor
+#define DIR 8     // Richtung
+#define STEP 7    // Schrittimpuls
+#define SLEEP 6   // Energiesparen
+#define MS1 5     // Microstep-Pin 1
+#define MS2 4     // Microstep-Pin 2
+#define MS3 3     // Microstep-Pin 3
 
-#define STOPP 2  //2 ist Interruptfähig
+#define STOPP 2  // Endschalter (Interrupt-fähig)
 
 LowerStepper stepper(RPM, DIR, STEP, SLEEP, MS1, MS2, MS3, STOPP); // Objekt erzeugen
 
 #include "UpperStepper.h"                  // oberer Schrittmotor
 
-//Pins
-#define upper_DIR 27
-#define upper_STEP 26
-#define upper_SLEEP 25
-#define upper_MS3 24
-#define upper_MS2 23
-#define upper_MS1 22
+// Pins für den oberen Schrittmotor
+#define upper_DIR 27   // Richtung
+#define upper_STEP 26  // Schrittimpuls
+#define upper_SLEEP 25 // Sleep-Pin
+#define upper_MS3 24   // Microstep-Pin 3
+#define upper_MS2 23   // Microstep-Pin 2
+#define upper_MS1 22   // Microstep-Pin 1
 
 UpperStepper stepper2(RPM, upper_DIR, upper_STEP, upper_SLEEP, upper_MS1, upper_MS2, upper_MS3);
 
@@ -38,15 +38,18 @@ UpperStepper stepper2(RPM, upper_DIR, upper_STEP, upper_SLEEP, upper_MS1, upper_
 #//define DEV
 
 #include "DcMotor.h"                       // Gleichstrommotor für Gebläse
-DcMotor gsm(10, 11, 12, 13, 9);            // Pins übergeben
+// Reihenfolge: in1, in2, in3, in4, PWM-Pin
+DcMotor gsm(10, 11, 12, 13, 9);            // Motorobjekt anlegen
 
 //=========US-Sensoren=========//
-struct Sensor {                            // Pins eines Ultraschallsensors
+// Struktur für die Anschlussbelegung eines Ultraschallsensors
+struct Sensor {
   uint8_t trig;                           // Trigger-Pin
   uint8_t echo;                           // Echo-Pin
 };
 
-Sensor sensoren[6] = {                     // sechs Sensoren
+// Array mit allen Sensoren in Reihenfolge rund um den Teller
+Sensor sensoren[6] = {
   {43, 42}, {45, 44}, {47, 46}, {48, 49}, {50, 51}, {41,40}
 };
 
@@ -75,10 +78,10 @@ void setup() {
 
 #include "Messager.h"
 
-Modus m = OFF;
+Modus m = OFF;       // aktueller Betriebsmodus
 
-uint8_t stufe = 0;
-uint8_t m_pos = 0;
+uint8_t stufe = 0;   // aktuelle Lüfterstufe
+uint8_t m_pos = 0;   // Position des oberen Motors
 
 //=================================================================
 //=================================================================
@@ -139,14 +142,15 @@ void loop() {
   }
 }
 
+// liest das aktuelle Steuerpaket vom Master ein
 void getCurrentData() {
-  Modus t_m = OFF;
-  uint8_t t_stufe = 0;
-  uint8_t t_pos = 0;
+  Modus t_m = OFF;       // temporärer Modus
+  uint8_t t_stufe = 0;   // temporäre Stufe
+  uint8_t t_pos = 0;     // temporäre Position
 
-  static Modus l_m = OFF;
-  static uint8_t l_stufe = 0;
-  static uint8_t l_pos = 0;
+  static Modus l_m = OFF;       // zuletzt empfangener Modus
+  static uint8_t l_stufe = 0;   // zuletzt empfangene Stufe
+  static uint8_t l_pos = 0;     // zuletzt empfangene Position
 
   if(!Messager.available()) {             // warten bis drei Bytes da sind
     delay(100);
@@ -158,6 +162,7 @@ void getCurrentData() {
   if(t_stufe > 4)   t_stufe = 4;
   if(t_pos > 36)  t_pos   = 36;
 
+  // nur bei Änderung Werte übernehmen
   if(t_m != l_m || t_stufe!= l_stufe || t_pos  != l_pos) {
     l_m = t_m;
     l_stufe = t_stufe;
@@ -187,7 +192,7 @@ long messung(uint8_t trigPin, uint8_t echoPin, const int MAX_ENTFERNUNG) {
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
   long dauer = pulseIn(echoPin, HIGH);     // Echo-Zeit messen
-  long entfernung = dauer/ 2 * 0.03432;    // Entfernung berechnen
+  long entfernung = dauer/ 2 * 0.03432;    // Entfernung in cm berechnen
   if(entfernung >= MAX_ENTFERNUNG) return MAX_ENTFERNUNG;
   delay(50);
   return entfernung;

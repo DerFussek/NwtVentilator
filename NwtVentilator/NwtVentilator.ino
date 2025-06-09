@@ -8,9 +8,9 @@
 
 //*****************Fernbedinung**********************//
 #include <IRremote.h>
-const short int remotePIN = 13;
+const short int remotePIN = 13;      // Pin für den IR-Empfänger
 
-
+// Objekt zum Einlesen der Fernbedienung
 IRrecv remote(remotePIN);
 
 //*****************Ampelanzeige**********************//
@@ -20,50 +20,52 @@ const short int trafficlightGREEN = 11;
 
 //*******************Ringled************************//
 #include <Adafruit_NeoPixel.h>
-const short int ringLED = 12;  //Pin an dem die Ringled angeschlossen ist
-const short int numberLEDS = 8;
+const short int ringLED = 12;  // Pin an dem die Ringled angeschlossen ist
+const short int numberLEDS = 8; // Anzahl der LEDs im Ring
 
+// Aktuelle Farbe des LED-Rings (RGB)
 int ringLedColor[3] = {255, 0, 0};
 
+// Objekt zur Ansteuerung des Rings
 Adafruit_NeoPixel ring(numberLEDS, ringLED, NEO_GRB + NEO_KHZ800);
 
 //*****************Schrittmotoren*********************//
 //Generelle Konfigurationen (für beide Motoren gleich)
 #include "A4988.h"
 
-const short int STEPS = 200;     
-const short int microSTEPS = 16;
-const short int RPM = 120;
+const short int STEPS = 200;   // Vollschritte pro Umdrehung
+const short int microSTEPS = 16; // Mikroschritte
+const short int RPM = 120;     // Drehzahl in U/min
 
 //Schrittmotor 1 (Pinbelegungnen für den ersten Schrittmotor)
-const short int s1_DIR = 2;
-const short int s1_STEP = 3;
-const short int s1_SLEEP = 4;
-const short int s1_MS1 = 7;
-const short int s1_MS2 = 6;
-const short int s1_MS3 = 5; 
+const short int s1_DIR = 2;    // Richtungspin
+const short int s1_STEP = 3;   // Schrittpin
+const short int s1_SLEEP = 4;  // Schlafmodus
+const short int s1_MS1 = 7;    // Microstep 1
+const short int s1_MS2 = 6;    // Microstep 2
+const short int s1_MS3 = 5;    // Microstep 3
 
 const short int s1_STOPP;  // Endschalter für Motor 1
 
 A4988 stepper1(STEPS, s1_DIR, s1_STEP, s1_SLEEP, s1_MS1, s1_MS2, s1_MS3);
 
 //Schrittmotor 2 (Pinbelegungnen für den zweiten Schrittmotor)
-const short int s2_DIR = 2;
-const short int s2_STEP = 3;
-const short int s2_SLEEP = 4;
-const short int s2_MS1 = 7;
-const short int s2_MS2 = 6;
-const short int s2_MS3 = 5; 
+const short int s2_DIR = 2;    // Richtungspin
+const short int s2_STEP = 3;   // Schrittpin
+const short int s2_SLEEP = 4;  // Schlafmodus
+const short int s2_MS1 = 7;    // Microstep 1
+const short int s2_MS2 = 6;    // Microstep 2
+const short int s2_MS3 = 5;    // Microstep 3
 
 A4988 stepper2(STEPS, s2_DIR, s2_STEP, s2_SLEEP, s2_MS1, s2_MS2, s2_MS3);
 
 //***************Gleichschrittmotor*******************//
-const short int gsm_IN1;
-const short int gsm_IN2;
-const short int gsm_IN3;
-const short int gsm_IN4;
+const short int gsm_IN1;       // Steuerpin 1 des DC-Motors
+const short int gsm_IN2;       // Steuerpin 2
+const short int gsm_IN3;       // Steuerpin 3
+const short int gsm_IN4;       // Steuerpin 4
 
-const short int gsm_SPEED;
+const short int gsm_SPEED;     // PWM-Pin für Drehzahl
 
 //***************Ultraschallsensoren*******************//
 //TODO
@@ -155,7 +157,7 @@ void readRemote() {
   }
   command = "";
   
-  remote.resume(); //Empänger wartet auf das nächste Signal
+  remote.resume();            // Empfänger wartet auf das nächste Signal
    
 }
 
@@ -182,17 +184,17 @@ void TrafficlightMANUAL() {
 // Aktualisiert die Anzeige des LED-Rings entsprechend der Stufe
 
 void LedRing() {
-    static long pressDelay = millis();
-    if(!(millis() - pressDelay >= 200)) return;
+    static long pressDelay = millis();          // Zeitstempel für Updates
+    if(!(millis() - pressDelay >= 200)) return; // nur alle 200 ms aktualisieren
     pressDelay = millis();
 
-    ring.clear();
-    int ledProStufe = numberLEDS / 6;
+    ring.clear();                               // LEDs ausschalten
+    int ledProStufe = numberLEDS / 6;           // LEDs pro Stufe
 
+    // entsprechend der aktuellen Stufe einschalten
     for(int i = 0; i < stufe * ledProStufe; i++) {
       ring.setPixelColor(i, ring.Color(ringLedColor[0], ringLedColor[1], ringLedColor[2]));
-    } 
+    }
 
-    
     ring.show();
 }
