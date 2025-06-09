@@ -1,3 +1,7 @@
+/*
+ * Hauptsketch der klassischen Ventilatorsteuerung.
+ * Liest die Fernbedienung aus und steuert LEDs und Motoren.
+ */
 //===================================================//
 //                   Einstellungen                   //
 //===================================================//
@@ -39,7 +43,7 @@ const short int s1_MS1 = 7;
 const short int s1_MS2 = 6;
 const short int s1_MS3 = 5; 
 
-const short int s1_STOPP;
+const short int s1_STOPP;  // Endschalter für Motor 1
 
 A4988 stepper1(STEPS, s1_DIR, s1_STEP, s1_SLEEP, s1_MS1, s1_MS2, s1_MS3);
 
@@ -72,11 +76,11 @@ const short int gsm_SPEED;
 //===================================================//
 
 //Statusinformation
-bool automatic = false;
-bool off = true;
-bool manual = false;
+bool automatic = false;  // Automatikmodus aktiv?
+bool off = true;  // Alle Funktionen ausgeschaltet?
+bool manual = false;  // Manueller Modus aktiv?
 
-unsigned short int stufe = 1;
+unsigned short int stufe = 1;  // Aktuelle Lüfterstufe
 
 
 //===================================================//
@@ -103,6 +107,7 @@ void loop() {
   Serial.println(stufe);
 }
 
+// Liest ein IR-Signal ein und aktualisiert den Betriebsmodus
 void readRemote() {
   static long pressDelay = millis();
 
@@ -174,6 +179,7 @@ void TrafficlightMANUAL() {
   digitalWrite(trafficlightRED, LOW);
   digitalWrite(trafficlightYELLOW, HIGH);
 }
+// Aktualisiert die Anzeige des LED-Rings entsprechend der Stufe
 
 void LedRing() {
     static long pressDelay = millis();

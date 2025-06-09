@@ -1,3 +1,4 @@
+// Testsketch zum Ausprobieren eines Ultraschallsensors.
 #include "Arduino.h"
 // Pin-Definition
 const int trigPin = 9;

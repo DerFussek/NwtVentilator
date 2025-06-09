@@ -1,3 +1,4 @@
+// Klasse zum Auswerten der Infrarot-Fernbedienung.
 #include <IRremote.h>
 
 enum Button { NONE, A, B, C, UP, DOWN, RIGHT, LEFT }; //Datentyp für die Tasten der Fernbedinung erstellen
