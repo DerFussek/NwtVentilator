@@ -1,3 +1,8 @@
+/*
+ * Programm für den zweiten Arduino.
+ * Steuert die Schrittmotoren und den Gebläsemotor
+ * und verarbeitet die Daten der Ultraschallsensoren.
+ */
 #include "Arduino.h"                      // Grundlegende Arduino-API
 #include "A4988.h"                        // Treiberbibliothek
 #include "LowerStepper.h"                 // eigener Schrittmotor unten

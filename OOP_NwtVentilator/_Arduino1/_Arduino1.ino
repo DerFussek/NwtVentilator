@@ -1,3 +1,7 @@
+/*
+ * Alte Version des Bedien-Sketches.
+ * Dient nur noch zu Referenzzwecken.
+ */
 //*****************Ampelanzeige**********************//
 const int ampelRedPin = 9;
 const int ampelYellowPin = 10;

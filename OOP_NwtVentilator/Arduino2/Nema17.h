@@ -1,3 +1,4 @@
+// Basisklasse zur Ansteuerung eines Nema17-Schrittmotors.
 #pragma once                               // Mehrfacheinbindung verhindern
 #include "A4988.h"                         // Bibliothek für A4988 Treiber
 

@@ -1,3 +1,4 @@
+// Klasse zur Steuerung der dreifarbigen Ampel-LED.
 class AmpelDisplay {                      // Klasse für die dreifarbige LED-Anzeige
   private:
     // Pins der einzelnen Farben merken

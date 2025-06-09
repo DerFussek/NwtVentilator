@@ -1,3 +1,4 @@
+// Einfache Klasse zur Ansteuerung des Gleichstrom-Gebläsemotors.
 #include "Arduino.h"               // Grundlegende Arduino-Funktionen
 class DcMotor {                     // Klasse zur Ansteuerung eines DC-Motors
   private:

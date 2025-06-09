@@ -1,3 +1,4 @@
+// Ableitung für den unteren Schrittmotor inklusive Referenzfahrt.
 #pragma once                              // Mehrfacheinbindung verhindern
 #include "Nema17.h"                       // Basisklasse für Nema17-Schrittmotor
 
