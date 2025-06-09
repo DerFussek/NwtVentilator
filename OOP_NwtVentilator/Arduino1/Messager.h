@@ -1,3 +1,4 @@
+// Hilfsklasse für die serielle Kommunikation zwischen den Arduinos.
 #include "HardwareSerial.h"                           //Serielle Schnittstelle nutzen
 #include <stdint.h>
 

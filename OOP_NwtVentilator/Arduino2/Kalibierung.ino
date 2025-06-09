@@ -1,3 +1,4 @@
+// Funktionen zur Kalibrierung der Ultraschallsensoren.
 // Median aus einem Array von long-Werten berechnen
 long berechneMedian(const long werte[], int anzahl) {
   // 1) Werte kopieren

@@ -1,3 +1,8 @@
+/*
+ * Steuerung des Bedien-Arduinos.
+ * Liest die Fernbedienung aus und zeigt den Status 
+ * über LEDs und den LED-Ring an.
+ */
 
 //*****************Ampelanzeige**********************//
 #include "AmpelDisplay.h"                // Anzeige über drei LEDs

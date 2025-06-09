@@ -1,3 +1,4 @@
+// Klasse zur Ansteuerung eines NeoPixel-LED-Streifens.
 #pragma once                                 // Mehrfacheinbindung verhindern
 #include <Adafruit_NeoPixel.h>               // Bibliothek für den LED‑Strip
 

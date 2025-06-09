@@ -1,3 +1,4 @@
+// Serielle Kommunikationsschnittstelle für Arduino 2.
 #include "HardwareSerial.h"                           //Serielle Schnittstelle nutzen
 #include <stdint.h>
 

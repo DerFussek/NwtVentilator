@@ -1,3 +1,4 @@
+// Einfacher Testsketch für einen einzelnen Schrittmotor.
 #include <Arduino.h>
 #include "A4988.h"
 

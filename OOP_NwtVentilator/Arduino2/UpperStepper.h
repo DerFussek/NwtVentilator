@@ -1,3 +1,4 @@
+// Spezialisierung des Nema17 für den oberen Drehteller.
 #pragma once                              // nur einmal einbinden
 #include "Nema17.h"                       // Basisklasse
 

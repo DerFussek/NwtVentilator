@@ -1,3 +1,5 @@
+// Routinen zur Auswertung der Ultraschallsensoren
+// und zur automatischen Ausrichtung des oberen Motors.
 const int HYSTERESE = 15;         // Toleranzschwelle bei den Sensoren
 const int COUNTER = 1;            // wie oft ein Delta überschritten werden muss
 void auswertenUndDrehen() {       // Messwerte ermitteln und Motor steuern
