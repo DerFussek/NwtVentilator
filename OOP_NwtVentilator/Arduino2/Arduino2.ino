@@ -32,10 +32,10 @@ LowerStepper stepper(RPM, DIR, STEP, SLEEP, MS1, MS2, MS3, STOPP); // Objekt erz
 #define upper_MS2 23   // Microstep-Pin 2
 #define upper_MS1 22   // Microstep-Pin 1
 
-UpperStepper stepper2(RPM, upper_DIR, upper_STEP, upper_SLEEP, upper_MS1, upper_MS2, upper_MS3);
+UpperStepper stepper2(RPM, upper_DIR, upper_STEP, upper_SLEEP, upper_MS1, upper_MS2, upper_MS3); //Objekt erzeugen
 
 
-#//define DEV
+
 
 #include "DcMotor.h"                       // Gleichstrommotor für Gebläse
 // Reihenfolge: in1, in2, in3, in4, PWM-Pin
@@ -48,7 +48,7 @@ struct Sensor {
   uint8_t echo;                           // Echo-Pin
 };
 
-// Array mit allen Sensoren in Reihenfolge rund um den Teller
+// Array mit allen Sensoren in Reihenfolge rund um das Zahnrad 
 Sensor sensoren[6] = {
   {43, 42}, {45, 44}, {47, 46}, {48, 49}, {50, 51}, {41,40}
 };
@@ -87,62 +87,43 @@ uint8_t m_pos = 0;   // Position des oberen Motors
 //=================================================================
 //=================================================================
 //=================================================================
-#define DEV
+#define DEV //Wenn definiert werden sämtliche Daten auf dem Seriellen Monitor ausgegeben
 
-bool kalibiert = false;
-long r0[6], r30[6];
+bool iscalibrated = false; //angabe ob die Kalibrierung schon erfolgt ist
+long r0[6], r30[6]; //Referenz arrays
 
 void loop() {
-  /*
-  while(true) {
-    if(Serial.available() > 0) {
-      String input = Serial.readStringUntil("\n");
-      input.trim();
-      if(input.equals("ON")) {
-        gsm.enable();
-      } else if(input.equals("OFF")) {
-        gsm.disable();
-      } else {
-        int deg = input.toInt();
-        Serial.println(deg);
-        stepper2.movestepper(deg);
-      }
-      
-    }
-    
-    gsm.setSpeed(64);
+  
+  if(iscalibrated == false) {                // Einmalige Kalibrierung
+    kalibiere(7); //kalibrieren mit 7 messungen
+    iscalibrated = true;
   }
-  */
-  if(kalibiert == false) {                // Einmalige Kalibrierung
-    kalibiere(7); // Messanzahl übergeben
-    kalibiert = true;
-  }
-  getCurrentData();
 
+  getCurrentData(); //Daten vom anderen Arduino auslesen und auswerten
 
-  if(m == ON) {
-    stepper.getStepper().enable();
+  if(m == ON) { //Wenn der Modus auf An ist wird die bedingung erfüllt
+    stepper.getStepper().enable();  //Beide Schrittmotoren in bereitschaft stellen
     stepper2.getStepper().enable();
     
-    auswertenUndDrehen();
+    auswertenUndDrehen(); //Messen, Auswerten & Motor ausrichten
     
-    gsm.enable();
-    int speed = map(stufe, 0, 4, 0, 255);
-    gsm.setSpeed(speed);
+    gsm.enable(); //Gleichstrommotor aktivieren
+    int speed = map(stufe, 0, 4, 0, 255); //Stufe von 0-255 den gewünschten 4 stufen anpassen
+    gsm.setSpeed(speed);  //Geschwindigkeit übergeben
 
-  } else if(m == OFF) {
-    gsm.disable();
+  } else if(m == OFF) { //Wenn der Modus aus ist -> alle Motoren ausschalten
+    gsm.disable();  
     stepper.getStepper().disable();
     stepper2.getStepper().disable();
-  } else if(m == MANUAL) {
-    gsm.enable();
-    int speed = map(stufe, 0, 4, 0, 255);
-    gsm.setSpeed(speed);
-    stepper2.movestepper(m_pos*10);
+  } else if(m == MANUAL) {  //Wenn der Modus auf Manuell gestellt ist:
+    gsm.enable(); //Gleichstrommotor an machen
+    int speed = map(stufe, 0, 4, 0, 255); //Stufe von 0-255 den gewünschten 4 stufen anpassen
+    gsm.setSpeed(speed);  //Geschwindigkeitübergeben
+    stepper2.movestepper(m_pos*10); //Oberer Schrittmotor zur gewünschten Position fahren
   }
 }
 
-// liest das aktuelle Steuerpaket vom Master ein
+// liest das aktuelle Steuerpaket vom anderen Arduino[Arduino1.ino] ein
 void getCurrentData() {
   Modus t_m = OFF;       // temporärer Modus
   uint8_t t_stufe = 0;   // temporäre Stufe
@@ -156,10 +137,10 @@ void getCurrentData() {
     delay(100);
     return;                   // kein neues Paket -> Funktion beenden
   }
-  Messager.read(t_m, t_stufe, t_pos);
+  Messager.read(t_m, t_stufe, t_pos); //Paket in den drei Variablen t_m, t_stufe und t_pos speichern
 
 
-  if(t_stufe > 4)   t_stufe = 4;
+  if(t_stufe > 4)   t_stufe = 4;  //stufe und position begrenzen
   if(t_pos > 36)  t_pos   = 36;
 
   // nur bei Änderung Werte übernehmen
@@ -172,14 +153,15 @@ void getCurrentData() {
     stufe = l_stufe;
     m_pos = l_pos;
 
-    //#ifdef DEV
+    //Nur ausführen wenn DEV definiert ist
+    #ifdef DEV
     Serial.print(m);
     Serial.print(",");
     Serial.print(stufe);
     Serial.print(",");
     Serial.print(m_pos);
     Serial.println(",");
-    //#endif
+    #endif
   }
 }
 
