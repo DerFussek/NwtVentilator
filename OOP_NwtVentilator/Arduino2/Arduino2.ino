@@ -179,13 +179,3 @@ long messung(uint8_t trigPin, uint8_t echoPin, const int MAX_ENTFERNUNG) {
   delay(50);
   return entfernung;
 }
-
-
-
-
-
-
-
-
-
-
