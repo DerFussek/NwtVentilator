@@ -8,7 +8,7 @@ Der Ventilator besteht aus zwei miteinander verbundenen Arduino Mega 2560.
 
 **Arduino 1 (Bedienung)**
 - Infrarot-Empfänger am Pin 13 für die Fernbedienung
-- Ring aus acht NeoPixel-LEDs am Pin 12
+- LED-Strip aus acht NeoPixel-LEDs am Pin 12
 - Drei Status-LEDs (Ampel) an den Pins 45 (Rot), 41 (Gelb) und 43 (Grün)
 - Kommunikation mit dem zweiten Arduino über `Serial2`
 
