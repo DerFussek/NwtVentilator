@@ -118,7 +118,7 @@ void justiere30(long t_r30[6]) {          // Ausrichtung bei 30° Messung
       int ziel = maxDeltaSensor * 60 + 30; // Zielposition bestimmen
       if(maxDeltaSensor == 5) ziel = -30;  // Sonderfall für den größten
       
-      stepper2.movestepper(ziel);
+      stepper2.movestepper(ziel); //Oberen Schrittmotor zur Zielposition fahren
       
       #ifdef DEV
       Serial.println("Ziel bei " + (String)ziel + "° ; Delta = " + (String) maxDelta);

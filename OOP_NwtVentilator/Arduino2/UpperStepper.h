@@ -19,21 +19,6 @@ class UpperStepper : public Nema17 {      // oberer Schrittmotor
       motor.disable();
     }
 
-    // kleiner Testablauf
-    void test() {
-      delay(2500);
-      motor.setRPM(25);
-      motor.setSpeedProfile(motor.LINEAR_SPEED, 1000, 1000);
-      motor.enable();
-      motor.rotate(-90);
-      
-      delay(1000);
-      motor.enable();
-      motor.rotate(90);
-      motor.disable();
-      delay(2500);
-    }
-
     // Motor auf absolute Position fahren
     void movestepper(int ziel) {
       int delta = ziel - position;
